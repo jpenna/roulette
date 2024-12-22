@@ -16,3 +16,11 @@ bets:
 # Run the robot
 run-robot:
 	go run . --robot
+
+# Build the roulette map
+build-map:
+	go run . --build-map
+
+# Play the game with the robot
+play-robot:
+	go run . --play-robot

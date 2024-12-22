@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -28,23 +29,55 @@ func main() {
 		log.SetFlags(0)
 		printBets()
 	case "--robot":
-		robot.Screen()
+		robot.Play()
+	case "--build-map":
+		robot.NewRouletteMap("roulette.json")
+	case "--play-robot":
+		log.SetFlags(0)
+		log.Println("Iniciando bot...")
+		log.Println("Confirme que o número vizinho é 1.")
+		robot.Play()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}
 }
 
 func runSimulations() {
-	// sliceSize := 25
-	// for i := 0; i < 20; i++ {
-	// 	start := i * sliceSize
-	// 	end := start + sliceSize
-	// 	if end > len(simulation.Last) {
-	// 		break
-	// 	}
-	// 	simulation.Run(simulation.Last[start:end], 5, 1)
-	// }
+	list := simulation.Last
 
-	simulation.Run(simulation.Last4[0:100], 1, 2)
-	simulation.Run(simulation.Last4, 1, 2)
+	sum0 := 0.0
+	sum1 := 0.0
+	sum2 := 0.0
+
+	sliceSize := 100
+	for i := 0; i < len(list)/sliceSize; i++ {
+
+		start := i * sliceSize
+		end := start + sliceSize
+		if end > len(list) {
+			break
+		}
+
+		res0 := simulation.Run(list[start:end], 2.5, 0)
+		res1 := simulation.Run(list[start:end], 2.5, 1)
+		res2 := simulation.Run(list[start:end], 2.5, 2)
+
+		fmt.Printf("0: %f\n", res0)
+		fmt.Printf("1: %f\n", res1)
+		fmt.Printf("2: %f\n", res2)
+		fmt.Println()
+
+		sum0 += res0
+		sum1 += res1
+		sum2 += res2
+
+	}
+
+	fmt.Printf("sum 0: %f\n", sum0)
+	fmt.Printf("sum 1: %f\n", sum1)
+	fmt.Printf("sum 2: %f\n", sum2)
+
+	simulation.Run(list, 2.5, 0)
+	simulation.Run(list, 2.5, 1)
+	simulation.Run(list, 2.5, 2)
 }

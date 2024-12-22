@@ -6,15 +6,15 @@ import (
 	"elem.com/roulette/game"
 )
 
-func Run(numbers []int, bet float64, protection int) {
-	execute(numbers, bet, protection, false)
+func Run(numbers []int, bet float64, protection int) float64 {
+	return execute(numbers, bet, protection, false)
 }
 
-func RunMartingale(numbers []int, bet float64, protection int) {
-	execute(numbers, bet, protection, true)
+func RunMartingale(numbers []int, bet float64, protection int) float64 {
+	return execute(numbers, bet, protection, true)
 }
 
-func execute(numbers []int, bet float64, protection int, martin bool) {
+func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 	results := play(numbers, protection)
 
 	investment := 0.0
@@ -68,6 +68,8 @@ func execute(numbers []int, bet float64, protection int, martin bool) {
 	fmt.Printf("Pior cenário possível: R$ %.2f\n", worstLoss)
 	fmt.Printf("Maior sequência de perdas: %d\n", lostSeq)
 	fmt.Printf("---\n\n")
+
+	return investment
 }
 
 func play(numbers []int, protection int) []bool {

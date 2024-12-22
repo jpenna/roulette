@@ -9,8 +9,8 @@ import (
 )
 
 type Window struct {
-	topLeft     [2]int
-	bottomRight [2]int
+	TopLeft     [2]int `json:"topLeft"`
+	BottomRight [2]int `json:"bottomRight"`
 }
 
 func (w *Window) Capture() {
@@ -19,13 +19,14 @@ func (w *Window) Capture() {
 	reader.ReadString('\n')
 
 	x, y := robotgo.Location()
-	fmt.Println("Superior esquerdo: ", x, y)
-	w.topLeft = [2]int{x, y}
+	w.TopLeft = [2]int{x, y}
 
 	fmt.Println("Posicione o mouse no canto inferior direito da janela e pressione Enter")
 	reader.ReadString('\n')
 
 	x, y = robotgo.Location()
-	fmt.Println("Inferior direito: ", x, y)
-	w.bottomRight = [2]int{x, y}
+	w.BottomRight = [2]int{x, y}
+
+	fmt.Println("Superior esquerdo: ", w.TopLeft)
+	fmt.Println("Inferior direito: ", w.BottomRight)
 }

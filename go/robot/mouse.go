@@ -13,8 +13,13 @@ type Point struct {
 	X, Y float64
 }
 
-func MoveTo(x, y int) {
+func Click(x, y int) {
 	moveBezier(x, y)
+
+	delay := time.Duration(400+rand.Float64()*700) * time.Millisecond
+	time.Sleep(delay)
+
+	robotgo.Click()
 }
 
 // moveBezier moves the mouse in a natural-looking curve using cubic Bézier interpolation
@@ -26,7 +31,10 @@ func moveBezier(destX, destY int) {
 	dist, ctrl1, ctrl2 := generateControlPoints(start, end)
 
 	// Number of steps for the movement (adjust for speed)
-	steps := int(dist) * rand.Intn(400) / 1000
+	steps := int(dist) * rand.Intn(400) / 200
+	if dist > 400 {
+		steps = steps / 5
+	}
 
 	// Move the mouse along the Bézier curve
 	count := 0 // Use count so it will end in the correct destination

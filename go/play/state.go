@@ -36,27 +36,6 @@ func NewGameState() *GameState {
 	}
 }
 
-func (g *GameState) RunTerminal() {
-	for {
-		err := g.requestNumber()
-		if err != nil {
-			fmt.Println("Por favor, insira um número válido")
-			continue
-		}
-
-		g.computeWinsAndLosses()
-
-		err = g.getBets()
-		if err != nil {
-			fmt.Println("Por favor, insira um número válido")
-			continue
-		}
-
-		g.printTargets()
-
-	}
-}
-
 func (g *GameState) requestNumber() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Último número sorteado: ")
