@@ -1,0 +1,3 @@
+script to get numbers in Geralbet
+
+JSON.stringify(Array.from(document.querySelectorAll('.number-container--8752e')).map(a => a.textContent))
