@@ -12,3 +12,7 @@ play-terminal:
 # Print all bets for a given number
 bets:
 	go run . --bets
+
+# Run the robot
+run-robot:
+	go run . --robot

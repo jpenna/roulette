@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"elem.com/roulette/play"
+	"elem.com/roulette/robot"
 	"elem.com/roulette/simulation"
 )
 
@@ -26,6 +27,8 @@ func main() {
 	case "--bets":
 		log.SetFlags(0)
 		printBets()
+	case "--robot":
+		robot.Screen()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}
