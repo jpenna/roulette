@@ -89,7 +89,7 @@ func play(numbers []int, protection int) []bool {
 		drawn := reversed[i+1]
 
 		if wonPrev || usedCount > protection {
-			bets, err := game.GetAllBets(previous)
+			_, bets, err := game.GetAllBets(previous)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				continue

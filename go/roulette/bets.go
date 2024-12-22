@@ -2,7 +2,7 @@ package roulette
 
 import "fmt"
 
-var expectationMap = map[int][]int{
+var betsMap = map[int][]int{
 	0:  {34, 14, 32, 10},
 	1:  {36, 1, 2, 29},
 	2:  {20, 5, 2, 22},
@@ -42,12 +42,12 @@ var expectationMap = map[int][]int{
 	36: {16, 36, 1, 12},
 }
 
-func GetExpectedFor(number int) ([]int, error) {
+func GetTargetBetsFor(number int) ([]int, error) {
 	if number < 0 || number > 36 {
 		return nil, fmt.Errorf("number out of range: %d", number)
 	}
 
-	expected, exists := expectationMap[number]
+	expected, exists := betsMap[number]
 	if !exists {
 		return nil, fmt.Errorf("no expectations found for number: %d", number)
 	}

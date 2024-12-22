@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
+	"elem.com/roulette/play"
 	"elem.com/roulette/simulation"
 )
 
@@ -15,17 +16,22 @@ func main() {
 
 	switch args[0] {
 	case "--simulate":
-		RunSimulations()
+		log.SetFlags(0)
+		runSimulations()
 		return
-	case "--play":
-		fmt.Println("playing")
+	case "--play-terminal":
+		log.SetFlags(0)
+		play.RunTerminal()
 		return
+	case "--bets":
+		log.SetFlags(0)
+		printBets()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}
 }
 
-func RunSimulations() {
+func runSimulations() {
 	sliceSize := 25
 	for i := 0; i < 20; i++ {
 		start := i * sliceSize
@@ -38,14 +44,3 @@ func RunSimulations() {
 
 	simulation.Run(simulation.Last, 10, 2)
 }
-
-// func printBetsFor(x int) {
-// 	bets, err := game.GetAllBets(x)
-// 	if err != nil {
-// 		log.Println("Error getting bets for ", x, ":", err)
-// 	}
-
-// 	sort.Ints(bets)
-
-// 	log.Println("Bets for ", x, ":", bets)
-// }

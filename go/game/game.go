@@ -6,13 +6,12 @@ import (
 	"elem.com/roulette/roulette"
 )
 
-func GetAllBets(drawn int) ([]int, error) {
-	targets, err := roulette.GetExpectedFor(drawn)
+func GetAllBets(drawn int) (targets []int, all []int, err error) {
+	targets, err = roulette.GetTargetBetsFor(drawn)
 	if err != nil {
-		return nil, fmt.Errorf("error getting expected for %d: %w", drawn, err)
+		return nil, nil, fmt.Errorf("error getting expected for %d: %w", drawn, err)
 	}
 
-	var bets []int
 	for _, target := range targets {
 		index := roulette.RouletteNumberToIndex[target]
 
@@ -32,8 +31,8 @@ func GetAllBets(drawn int) ([]int, error) {
 			return index + 1
 		}()]
 
-		bets = append(bets, prev, target, next)
+		all = append(all, prev, target, next)
 	}
 
-	return bets, nil
+	return targets, all, nil
 }
