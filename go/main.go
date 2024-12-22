@@ -21,7 +21,7 @@ func main() {
 		return
 	case "--play-terminal":
 		log.SetFlags(0)
-		play.RunTerminal()
+		play.NewGameState().RunTerminal()
 		return
 	case "--bets":
 		log.SetFlags(0)
@@ -32,15 +32,16 @@ func main() {
 }
 
 func runSimulations() {
-	sliceSize := 25
-	for i := 0; i < 20; i++ {
-		start := i * sliceSize
-		end := start + sliceSize
-		if end > len(simulation.Last) {
-			break
-		}
-		simulation.Run(simulation.Last[start:end], 5, 2)
-	}
+	// sliceSize := 25
+	// for i := 0; i < 20; i++ {
+	// 	start := i * sliceSize
+	// 	end := start + sliceSize
+	// 	if end > len(simulation.Last) {
+	// 		break
+	// 	}
+	// 	simulation.Run(simulation.Last[start:end], 5, 1)
+	// }
 
-	simulation.Run(simulation.Last, 10, 2)
+	simulation.Run(simulation.Last4[0:100], 1, 2)
+	simulation.Run(simulation.Last4, 1, 2)
 }
