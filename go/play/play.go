@@ -21,7 +21,9 @@ func (g *GameState) run(ch chan<- []int) {
 	for {
 		err := g.requestNumber()
 		if err != nil {
-			fmt.Println("Por favor, insira um número válido")
+			fmt.Print("\033[41m")
+			fmt.Print("Por favor, insira um número válido")
+			fmt.Print("\033[0m\n")
 			continue
 		}
 
@@ -29,7 +31,9 @@ func (g *GameState) run(ch chan<- []int) {
 
 		err = g.getBets()
 		if err != nil {
-			fmt.Println("Por favor, insira um número válido")
+			fmt.Print("\033[41m")
+			fmt.Print("Por favor, insira um número válido")
+			fmt.Print("\033[0m\n")
 			continue
 		}
 

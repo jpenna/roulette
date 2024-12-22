@@ -43,13 +43,13 @@ func main() {
 }
 
 func runSimulations() {
-	list := simulation.Last
+	list := simulation.Last5
 
 	sum0 := 0.0
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 100
+	sliceSize := 25
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize

@@ -11,7 +11,7 @@ import (
 func Play() {
 	window := Window{}
 	window.Capture()
-
+	window.CaptureTerminal()
 	rouletteMap, err := UseRouletteMap("roulette.json", &window)
 	if err != nil {
 		fmt.Println("Error loading roulette map:", err)
@@ -31,6 +31,7 @@ func Play() {
 			delay := time.Duration(800+rand.Float64()*1000) * time.Millisecond
 			time.Sleep(delay)
 		}
-	}
 
+		window.ClickTerminal()
+	}
 }
