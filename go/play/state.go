@@ -30,9 +30,9 @@ type GameState struct {
 	bets    []int
 }
 
-func NewGameState() *GameState {
+func NewGameState(maxProtection int) *GameState {
 	return &GameState{
-		maxProtection: 0,
+		maxProtection: maxProtection,
 	}
 }
 
@@ -152,7 +152,6 @@ func (g *GameState) printTargets() {
 
 		log.Println()
 	}
-
 }
 
 func (g *GameState) PrintFullGameState() {

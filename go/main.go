@@ -23,33 +23,36 @@ func main() {
 		return
 	case "--play-terminal":
 		log.SetFlags(0)
-		play.NewGameState().RunTerminal()
+		play.NewGameState(2).RunTerminal()
 		return
 	case "--bets":
 		log.SetFlags(0)
 		printBets()
 	case "--robot":
-		robot.Play()
+		play.Play()
 	case "--build-map":
 		robot.NewRouletteMap("roulette.json")
+	case "--mouse-position":
+		robot.MousePosition()
 	case "--play-robot":
 		log.SetFlags(0)
 		log.Println("Iniciando bot...")
 		log.Println("Confirme que o número vizinho é 1.")
-		robot.Play()
+		play.Play()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}
 }
 
 func runSimulations() {
-	list := simulation.Last5
+	list := simulation.List7
+	chipValue := 2.5
 
 	sum0 := 0.0
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 25
+	sliceSize := 200
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize
@@ -58,9 +61,9 @@ func runSimulations() {
 			break
 		}
 
-		res0 := simulation.Run(list[start:end], 2.5, 0)
-		res1 := simulation.Run(list[start:end], 2.5, 1)
-		res2 := simulation.Run(list[start:end], 2.5, 2)
+		res0 := simulation.Run(list[start:end], chipValue, 0)
+		res1 := simulation.Run(list[start:end], chipValue, 1)
+		res2 := simulation.Run(list[start:end], chipValue, 2)
 
 		fmt.Printf("0: %f\n", res0)
 		fmt.Printf("1: %f\n", res1)
@@ -77,7 +80,7 @@ func runSimulations() {
 	fmt.Printf("sum 1: %f\n", sum1)
 	fmt.Printf("sum 2: %f\n", sum2)
 
-	simulation.Run(list, 2.5, 0)
-	simulation.Run(list, 2.5, 1)
-	simulation.Run(list, 2.5, 2)
+	simulation.Run(list, chipValue, 0)
+	simulation.Run(list, chipValue, 1)
+	simulation.Run(list, chipValue, 2)
 }

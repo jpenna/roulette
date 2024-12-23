@@ -1,10 +1,12 @@
 package robot
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
 
+	"elem.com/roulette/halt"
 	"github.com/go-vgo/robotgo"
 )
 
@@ -13,13 +15,30 @@ type Point struct {
 	X, Y float64
 }
 
+func MoveTo(x, y int) {
+	moveBezier(x, y)
+}
+
 func Click(x, y int) {
 	moveBezier(x, y)
 
-	delay := time.Duration(400+rand.Float64()*700) * time.Millisecond
+	delay := time.Duration(30+rand.Float64()*700) * time.Millisecond
 	time.Sleep(delay)
 
 	robotgo.Click()
+}
+
+func MousePosition() {
+	prevX, prevY := 0, 0
+	for {
+		x, y := robotgo.Location()
+		if x != prevX || y != prevY {
+			fmt.Println("Mouse position:", x, y)
+			prevX, prevY = x, y
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 // moveBezier moves the mouse in a natural-looking curve using cubic Bézier interpolation
@@ -39,6 +58,10 @@ func moveBezier(destX, destY int) {
 	// Move the mouse along the Bézier curve
 	count := 0 // Use count so it will end in the correct destination
 	for t := 0.0; count <= steps; t += 1.0 / float64(steps) {
+		if halt.IsHalted.Load() {
+			break
+		}
+
 		x, y := cubicBezier(start, ctrl1, ctrl2, end, t)
 		robotgo.Move(int(x), int(y))
 

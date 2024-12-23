@@ -2,43 +2,68 @@ package play
 
 import (
 	"fmt"
+	"math/rand/v2"
+	"time"
+
+	"elem.com/roulette/halt"
+	"elem.com/roulette/robot"
 )
 
-func (g *GameState) RunTerminal() {
+func Play() {
+	window := robot.Window{}
+	window.CaptureSize()
+	window.CaptureTerminal()
+
+	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
+	if err != nil {
+		fmt.Println("Error loading roulette map:", err)
+		return
+	}
+
+	maxProtection := requestProtection()
+	game := NewGameState(maxProtection)
+
 	ch := make(chan []int)
+	go game.RunRobot(ch, &window)
 
-	go g.run(ch)
+	for targets := range ch {
+		halt.IsHalted.Store(false)
 
-	for range ch {
+		go selectTargets(targets, &window, rouletteMap)
+
+		halt.ListenForHalt()
 	}
 }
 
-func (g *GameState) RunRobot(ch chan<- []int) {
-	g.run(ch)
+func requestProtection() int {
+	fmt.Print("Máximo de proteção (Enter para usar 2): ")
+	var maxProtection int = 2
+	var input string
+	fmt.Scanln(&input)
+	if input != "" {
+		if n, err := fmt.Sscanf(input, "%d", &maxProtection); err != nil || n != 1 {
+			fmt.Println("Valor inválido, usando proteção padrão (2)")
+			maxProtection = 2
+		}
+	}
+	return maxProtection
 }
 
-func (g *GameState) run(ch chan<- []int) {
-	for {
-		err := g.requestNumber()
-		if err != nil {
-			fmt.Print("\033[41m")
-			fmt.Print("Por favor, insira um número válido")
-			fmt.Print("\033[0m\n")
-			continue
+func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.RouletteMap) {
+	for _, target := range targets {
+		if halt.IsHalted.Load() {
+			break
 		}
 
-		g.computeWinsAndLosses()
+		rouletteMap.ClickNumber(target)
 
-		err = g.getBets()
-		if err != nil {
-			fmt.Print("\033[41m")
-			fmt.Print("Por favor, insira um número válido")
-			fmt.Print("\033[0m\n")
-			continue
-		}
-
-		g.printTargets()
-
-		ch <- g.targets
+		delay := time.Duration(300+rand.Float64()*1000) * time.Millisecond
+		time.Sleep(delay)
 	}
+
+	if !halt.IsHalted.Load() {
+		window.ClickTerminal()
+	}
+
+	halt.StopListenForHalt()
 }

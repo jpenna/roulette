@@ -67,7 +67,7 @@ func NewRouletteMap(filename string) {
 func buildRouletteMap(filename string) (*RouletteMap, error) {
 	// First capture the window region
 	window := &Window{}
-	window.Capture()
+	window.CaptureSize()
 
 	// Initialize the map
 	rouletteMap := &RouletteMap{
@@ -166,8 +166,6 @@ func (rm *RouletteMap) adjustCoordinates(window *Window) error {
 }
 
 func (rm *RouletteMap) adjustCoordinatesFor(window *Window, number int) (*Area, error) {
-	log.Printf("Adjusting coordinates for number %d\n", number)
-
 	area, exists := rm.NumberAreas[number]
 	if !exists {
 		return nil, fmt.Errorf("number %d not found in roulette map", number)
@@ -179,8 +177,6 @@ func (rm *RouletteMap) adjustCoordinatesFor(window *Window, number int) (*Area, 
 
 	scaleX := float64(window.BottomRight[0]-window.TopLeft[0]) / float64(rm.WindowRegion.BottomRight[0]-rm.WindowRegion.TopLeft[0])
 	scaleY := float64(window.BottomRight[1]-window.TopLeft[1]) / float64(rm.WindowRegion.BottomRight[1]-rm.WindowRegion.TopLeft[1])
-
-	log.Printf("scaleX: %f, scaleY: %f\n", scaleX, scaleY)
 
 	// Apply the offset to all corners
 	adjustedArea := Area{

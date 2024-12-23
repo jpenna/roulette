@@ -24,3 +24,7 @@ build-map:
 # Play the game with the robot
 play-robot:
 	go run . --play-robot
+
+# Print the mouse position
+mouse-position:
+	go run . --mouse-position
