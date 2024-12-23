@@ -3,6 +3,7 @@ package robot
 import (
 	"bufio"
 	"fmt"
+	"image"
 	"os"
 	"strconv"
 
@@ -16,6 +17,8 @@ type Window struct {
 	TerminalPosition [2]int
 
 	ReadyBarPosition [2]int
+
+	NumberArea image.Rectangle
 }
 
 func (w *Window) CaptureSize() {
@@ -36,12 +39,15 @@ func (w *Window) CaptureSize() {
 	fmt.Println("Inferior direito: ", w.BottomRight)
 
 	w.setReadyBarPosition(0)
+	w.setNumberArea()
 }
 
 func (w *Window) setReadyBarPosition(offset int) {
+	height := w.BottomRight[1] - w.TopLeft[1]
+
 	w.ReadyBarPosition = [2]int{
-		int(20 + float64(w.TopLeft[0])*1.1),        // 10% to the right (add 20 in case the coordinate is 0)
-		int(float64(w.TopLeft[1])*1.5084) + offset, // Found position
+		int(20 + float64(w.TopLeft[0])*1.1),  // 10% to the right (add 20 in case the coordinate is 0)
+		int(float64(height)*0.5084) + offset, // Found position
 	}
 
 	MoveTo(w.ReadyBarPosition[0], w.ReadyBarPosition[1])
@@ -70,6 +76,22 @@ func (w *Window) setReadyBarPosition(offset int) {
 	w.setReadyBarPosition(offset)
 }
 
+func (w *Window) setNumberArea() {
+	width := w.BottomRight[0] - w.TopLeft[0]
+	height := w.BottomRight[1] - w.TopLeft[1]
+
+	topLeftX := float64(width) * 0.473919523
+	topLeftY := float64(height) * 0.276257723
+
+	bottomRightX := float64(width) * 0.52260308
+	bottomRightY := float64(height) * 0.355692851
+
+	w.NumberArea = image.Rectangle{
+		Min: image.Point{X: int(topLeftX), Y: int(topLeftY)},
+		Max: image.Point{X: int(bottomRightX), Y: int(bottomRightY)},
+	}
+}
+
 func (w *Window) CaptureTerminal() {
 	fmt.Print("Posicione o mouse no TERMINAL e pressione Enter")
 	reader := bufio.NewReader(os.Stdin)
@@ -83,19 +105,4 @@ func (w *Window) CaptureTerminal() {
 
 func (w *Window) ClickTerminal() {
 	Click(w.TerminalPosition[0], w.TerminalPosition[1])
-}
-
-func (w *Window) IsReadyToBet() (bool, error) {
-	img, err := robotgo.CaptureImg(w.ReadyBarPosition[0], w.ReadyBarPosition[1], 1, 1)
-	if err != nil {
-		return false, fmt.Errorf("error capturing image: %w", err)
-	}
-
-	pixel := img.At(0, 0)
-	r, g, b, _ := pixel.RGBA()
-
-	greenMargin := g - 50 // 50 is the margin of error
-
-	// Check if green component is significantly higher than red and blue
-	return greenMargin > r && greenMargin > b, nil
 }

@@ -5,9 +5,19 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"elem.com/roulette/game"
 	"elem.com/roulette/halt"
 	"elem.com/roulette/robot"
 )
+
+func RunTerminal(g *game.GameState) {
+	ch := make(chan []int)
+
+	go run(g, ch)
+
+	for range ch {
+	}
+}
 
 func Play() {
 	window := robot.Window{}
@@ -21,10 +31,12 @@ func Play() {
 	}
 
 	maxProtection := requestProtection()
-	game := NewGameState(maxProtection)
+	gState := game.NewGameState(maxProtection)
+
+	// numberArea := game.NewNumberArea(window.NumberArea)
 
 	ch := make(chan []int)
-	go game.RunRobot(ch, &window)
+	go runRobot(gState, ch, &window)
 
 	for targets := range ch {
 		halt.IsHalted.Store(false)

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"elem.com/roulette/game"
 	"elem.com/roulette/play"
 	"elem.com/roulette/robot"
 	"elem.com/roulette/simulation"
@@ -23,7 +24,8 @@ func main() {
 		return
 	case "--play-terminal":
 		log.SetFlags(0)
-		play.NewGameState(2).RunTerminal()
+		gState := game.NewGameState(2)
+		play.RunTerminal(gState)
 		return
 	case "--bets":
 		log.SetFlags(0)
@@ -45,7 +47,7 @@ func main() {
 }
 
 func runSimulations() {
-	list := simulation.List7
+	list := simulation.Combined1
 	chipValue := 2.5
 
 	sum0 := 0.0

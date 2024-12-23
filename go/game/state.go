@@ -1,4 +1,4 @@
-package play
+package game
 
 import (
 	"bufio"
@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"elem.com/roulette/game"
 	"elem.com/roulette/roulette"
 )
 
@@ -36,7 +35,11 @@ func NewGameState(maxProtection int) *GameState {
 	}
 }
 
-func (g *GameState) requestNumber() error {
+func (g *GameState) GetTargets() []int {
+	return g.targets
+}
+
+func (g *GameState) RequestNumber() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Último número sorteado: ")
 	input, _ := reader.ReadString('\n')
@@ -44,17 +47,17 @@ func (g *GameState) requestNumber() error {
 	input = strings.TrimSpace(input)
 
 	if input == "u" {
-		err := g.updateSettings()
+		err := g.UpdateSettings()
 		if err != nil {
 			return fmt.Errorf("error updating settings: %w", err)
 		}
-		return g.requestNumber()
+		return g.RequestNumber()
 	}
 
 	if input == "p" {
 		log.Println()
 		g.PrintFullGameState()
-		return g.requestNumber()
+		return g.RequestNumber()
 	}
 
 	num, err := strconv.Atoi(input)
@@ -67,7 +70,7 @@ func (g *GameState) requestNumber() error {
 	return nil
 }
 
-func (g *GameState) updateSettings() error {
+func (g *GameState) UpdateSettings() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("\n\n---\nMáximo de proteção (atual: %d): ", g.maxProtection)
 	input, _ := reader.ReadString('\n')
@@ -86,7 +89,7 @@ func (g *GameState) updateSettings() error {
 	return nil
 }
 
-func (g *GameState) computeWinsAndLosses() {
+func (g *GameState) ComputeWinsAndLosses() {
 	if len(g.targets) == 0 {
 		return
 	}
@@ -113,10 +116,10 @@ func (g *GameState) computeWinsAndLosses() {
 	}
 }
 
-func (g *GameState) getBets() error {
+func (g *GameState) GetBets() error {
 	// If it's the first game or we won last or protection is above max, get all bets
 	if g.gameNumber == 0 || (g.wonLast || g.protectionCount >= g.maxProtection) {
-		targets, bets, err := game.GetAllBets(g.lastDrawn)
+		targets, bets, err := GetAllBets(g.lastDrawn)
 		if err != nil {
 			return fmt.Errorf("error getting bets: %w", err)
 		}
@@ -135,7 +138,7 @@ func (g *GameState) getBets() error {
 	return nil
 }
 
-func (g *GameState) printTargets() {
+func (g *GameState) PrintTargets() {
 	slices.SortFunc(g.targets, func(a, b int) int {
 		return roulette.RouletteNumberToIndex[a] - roulette.RouletteNumberToIndex[b]
 	})
