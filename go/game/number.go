@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/png"
 	"log"
 	"math/rand"
 	"os"
@@ -15,13 +14,17 @@ import (
 )
 
 var (
-	ErrNotANumber    = errors.New("not a number")
-	ErrInvalidNumber = errors.New("invalid number")
+	ErrNoNumber   = errors.New("no number")
+	ErrWrongColor = errors.New("wrong color")
 )
 
 const (
 	pointsNum     = 20
 	pointsPerSide = 5
+
+	tmpDir       = "data/tmp"
+	tmpVerifyImg = "data/tmp/capture.jpeg"
+	outputDir    = "data/numbers"
 )
 
 var (
@@ -49,10 +52,20 @@ type NumberArea struct {
 func init() {
 	client = gosseract.NewClient()
 	client.SetWhitelist("0123456789")
+	client.SetVariable("tessedit_write_images", "true")
 
 	for _, number := range blackNumbers {
 		isBlackArr[number] = true
 	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		log.Fatalf("error creating output directory: %v", err)
+	}
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		log.Fatalf("error creating tmp directory: %v", err)
+	}
+
 }
 
 func NewNumberArea(bounds image.Rectangle) *NumberArea {
@@ -101,12 +114,16 @@ func (n *NumberArea) CaptureNumber() (int, error) {
 		return 0, fmt.Errorf("error capturing image: %w", err)
 	}
 
+	if err := saveNumber(img, "capture", false, false); err != nil {
+		fmt.Printf("error saving number: %v", err)
+	}
+
 	color, err := n.getColor(img)
 	if err != nil {
 		return 0, fmt.Errorf("error getting color: %w", err)
 	}
 
-	return processImage(img, color)
+	return processImage(img, color, false)
 }
 
 func (n *NumberArea) getColor(img image.Image) (Color, error) {
@@ -115,20 +132,20 @@ func (n *NumberArea) getColor(img image.Image) (Color, error) {
 	color[0], color[1], color[2], _ = img.At(0, 0).RGBA()
 
 	// Compare with some tolerance as colors might not be exact
-	const tolerance uint32 = 0x4000
+	const toleranceBlack uint32 = 0x1000 // 4096
 	var isRed, isBlack, isGreen bool
 
-	if abs(color[0]-0xffff) <= tolerance && color[1] <= tolerance && color[2] <= tolerance {
+	if color[0] > color[1] && color[0] > color[2] {
 		isRed = true
-	} else if color[0] <= tolerance && abs(color[1]-0xffff) <= tolerance && color[2] <= tolerance {
+	} else if color[1] > color[0] && color[1] > color[2] {
 		isGreen = true
-	} else if color[0] <= tolerance && color[1] <= tolerance && color[2] <= tolerance {
+	} else if color[0] < toleranceBlack && color[1] < toleranceBlack && color[2] < toleranceBlack {
 		isBlack = true
 	}
 
 	// If none found, it's not a number
 	if !isRed && !isBlack && !isGreen {
-		return 0, ErrNotANumber
+		return 0, ErrNoNumber
 	}
 
 	// Check the borders for the same color
@@ -137,7 +154,7 @@ func (n *NumberArea) getColor(img image.Image) (Color, error) {
 
 		// The border color should be the same as the first pixel to be a number
 		if color[0] != r || color[1] != g || color[2] != b {
-			return 0, ErrNotANumber
+			return 0, ErrNoNumber
 		}
 	}
 
@@ -152,25 +169,23 @@ func (n *NumberArea) getColor(img image.Image) (Color, error) {
 	return ColorBlack, nil
 }
 
-// Helper function to calculate absolute difference between uint32
-func abs(a uint32) uint32 {
-	if a < 0x8000 {
-		return 0x8000 - a
+func processImage(img image.Image, color Color, invert bool) (int, error) {
+	if invert {
+		log.Println("Trying with inverted image")
+		// Try inverted to make the number more readable for OCR
+		img = invertImage(img)
 	}
-	return a - 0x8000
-}
 
-func processImage(img image.Image, color Color) (int, error) {
 	// Only 0 is green
 	if color == ColorGreen {
-		saveNumber(img, "0")
 		return 0, nil
 	}
 
-	// Invert image to make the number more readable for OCR
-	inverted := invertImage(img)
-
-	client.SetImageFromBytes(robotgo.ToByteImg(inverted))
+	// Tesseract doesn't work with []bits, I don't know why... Saving it to jpeg works.
+	robotgo.SaveJpeg(img, tmpVerifyImg)
+	if err := client.SetImage(tmpVerifyImg); err != nil {
+		return 0, fmt.Errorf("error setting image: %w", err)
+	}
 
 	text, err := client.Text()
 	if err != nil {
@@ -179,26 +194,29 @@ func processImage(img image.Image, color Color) (int, error) {
 
 	number, err := strconv.Atoi(text)
 	if err != nil {
-		return 0, fmt.Errorf("error parsing number: %w", err)
-	}
-
-	if err := saveNumber(img, text); err != nil {
-		return 0, fmt.Errorf("error saving number: %w", err)
-	}
-
-	// TODO: Remove this
-	if err := saveNumber(inverted, text+"_inverted"); err != nil {
-		return 0, fmt.Errorf("error saving number: %w", err)
+		return handleFailNumber(img, color, text, invert, "error parsing number")
 	}
 
 	if err := validateNumber(number, color); err != nil {
-		if err := saveNumber(inverted, text+"_invalid"); err != nil {
-			log.Printf("error saving number: %v", err)
-		}
-		return 0, fmt.Errorf("error validating number: %w", err)
+		return handleFailNumber(img, color, text, invert, "error validating number")
+	}
+
+	if err := saveNumber(img, text, invert, true); err != nil {
+		fmt.Printf("error saving number: %v", err)
 	}
 
 	return number, nil
+}
+
+func handleFailNumber(img image.Image, color Color, text string, invert bool, errText string) (int, error) {
+	if err := saveNumber(img, text, invert, false); err != nil {
+		log.Printf("error saving number: %v", err)
+	}
+	if !invert {
+		return processImage(img, color, true)
+	}
+
+	return 0, fmt.Errorf("%s: %w", errText, ErrNoNumber)
 }
 
 func invertImage(img image.Image) image.Image {
@@ -223,25 +241,28 @@ func invertImage(img image.Image) image.Image {
 // Validates the number matches the expected color
 func validateNumber(number int, color Color) error {
 	if color == ColorBlack && !isBlackArr[number] {
-		return fmt.Errorf("number should be BLACK but recognized is RED (%d): %w", number, ErrInvalidNumber)
+		return fmt.Errorf("number should be BLACK but recognized is RED (%d): %w", number, ErrWrongColor)
 	} else if color == ColorRed && isBlackArr[number] {
-		return fmt.Errorf("number should be RED but recognized is BLACK (%d): %w", number, ErrInvalidNumber)
+		return fmt.Errorf("number should be RED but recognized is BLACK (%d): %w", number, ErrWrongColor)
 	}
 
 	return nil
 }
 
-func saveNumber(img image.Image, number string) error {
-	randStr := fmt.Sprintf("%x", rand.Int31())
-	file, err := os.Create(fmt.Sprintf("%s_%s.png", number, randStr))
-	if err != nil {
-		return err
+func saveNumber(img image.Image, number string, invert bool, valid bool) error {
+	suffix := ""
+	if invert {
+		suffix = "inverted"
 	}
-	defer file.Close()
+	if !valid {
+		suffix += "_invalid"
+	}
 
-	// Encode the image as PNG
-	if err := png.Encode(file, img); err != nil {
-		return err
+	randStr := fmt.Sprintf("%x", rand.Int31())
+
+	// Saving it to png makes it fully transparent, so using jpeg.
+	if err := robotgo.SaveJpeg(img, fmt.Sprintf("%s/%s_%s_%s.png", outputDir, number, suffix, randStr)); err != nil {
+		return fmt.Errorf("error saving number: %w", err)
 	}
 
 	return nil

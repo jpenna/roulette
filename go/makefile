@@ -28,3 +28,7 @@ play-robot:
 # Print the mouse position
 mouse-position:
 	go run . --mouse-position
+
+# Test capturing the drawn number
+find-number:
+	go run . --find-number

@@ -41,6 +41,8 @@ func main() {
 		log.Println("Iniciando bot...")
 		log.Println("Confirme que o número vizinho é 1.")
 		play.Play()
+	case "--find-number":
+		robot.MatchNumbers()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}

@@ -22,6 +22,7 @@ func RunTerminal(g *game.GameState) {
 func Play() {
 	window := robot.Window{}
 	window.CaptureSize()
+	window.SetReadyBarPosition(0)
 	window.CaptureTerminal()
 
 	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)

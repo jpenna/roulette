@@ -38,16 +38,15 @@ func (w *Window) CaptureSize() {
 	fmt.Println("Superior esquerdo: ", w.TopLeft)
 	fmt.Println("Inferior direito: ", w.BottomRight)
 
-	w.setReadyBarPosition(0)
-	w.setNumberArea()
+	w.SetNumberArea()
 }
 
-func (w *Window) setReadyBarPosition(offset int) {
+func (w *Window) SetReadyBarPosition(offset int) {
 	height := w.BottomRight[1] - w.TopLeft[1]
 
 	w.ReadyBarPosition = [2]int{
-		int(20 + float64(w.TopLeft[0])*1.1),  // 10% to the right (add 20 in case the coordinate is 0)
-		int(float64(height)*0.5084) + offset, // Found position
+		int(20 + float64(w.TopLeft[0])*1.1),                 // 10% to the right (add 20 in case the coordinate is 0)
+		w.TopLeft[1] + int(float64(height)*0.5084) + offset, // Found position
 	}
 
 	MoveTo(w.ReadyBarPosition[0], w.ReadyBarPosition[1])
@@ -69,26 +68,26 @@ func (w *Window) setReadyBarPosition(offset int) {
 	offset, err := strconv.Atoi(input)
 	if err != nil {
 		fmt.Println("Por favor digite 'y' para confirmar ou um número para ajustar a posição da barra (+ para abaixar e - para subir)")
-		w.setReadyBarPosition(offset)
+		w.SetReadyBarPosition(offset)
 		return
 	}
 
-	w.setReadyBarPosition(offset)
+	w.SetReadyBarPosition(offset)
 }
 
-func (w *Window) setNumberArea() {
+func (w *Window) SetNumberArea() {
 	width := w.BottomRight[0] - w.TopLeft[0]
 	height := w.BottomRight[1] - w.TopLeft[1]
 
-	topLeftX := float64(width) * 0.473919523
-	topLeftY := float64(height) * 0.276257723
+	topLeftX := w.TopLeft[0] + int(float64(width)*0.473919523)
+	topLeftY := w.TopLeft[1] + int(float64(height)*0.276257723)
 
-	bottomRightX := float64(width) * 0.52260308
-	bottomRightY := float64(height) * 0.355692851
+	bottomRightX := w.TopLeft[0] + int(float64(width)*0.52260308)
+	bottomRightY := w.TopLeft[1] + int(float64(height)*0.355692851)
 
 	w.NumberArea = image.Rectangle{
-		Min: image.Point{X: int(topLeftX), Y: int(topLeftY)},
-		Max: image.Point{X: int(bottomRightX), Y: int(bottomRightY)},
+		Min: image.Point{X: topLeftX, Y: topLeftY},
+		Max: image.Point{X: bottomRightX, Y: bottomRightY},
 	}
 }
 
