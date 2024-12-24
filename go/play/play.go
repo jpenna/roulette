@@ -23,6 +23,7 @@ func Play() {
 	window := robot.Window{}
 	window.CaptureSize()
 	window.SetReadyBarPosition(0)
+	window.SetNumberArea()
 	window.CaptureTerminal()
 
 	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
@@ -34,17 +35,26 @@ func Play() {
 	maxProtection := requestProtection()
 	gState := game.NewGameState(maxProtection)
 
-	// numberArea := game.NewNumberArea(window.NumberArea)
+	numberArea := game.NewNumberArea(window.NumberArea)
 
-	ch := make(chan []int)
-	go runRobot(gState, ch, &window)
+	targetCh := make(chan []int)
+	numCh := make(chan int)
+	go runRobot(gState, targetCh, &window, numCh)
 
-	for targets := range ch {
+	doneCh := make(chan struct{})
+
+	// Listen for the first number
+	go numberArea.ReadNumber(numCh)
+
+	for targets := range targetCh {
 		halt.IsHalted.Store(false)
 
-		go selectTargets(targets, &window, rouletteMap)
-
+		go selectTargets(targets, &window, rouletteMap, doneCh)
 		halt.ListenForHalt()
+
+		<-doneCh
+
+		go numberArea.ReadNumber(numCh)
 	}
 }
 
@@ -62,7 +72,7 @@ func requestProtection() int {
 	return maxProtection
 }
 
-func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.RouletteMap) {
+func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.RouletteMap, doneTargetCh chan struct{}) {
 	for _, target := range targets {
 		if halt.IsHalted.Load() {
 			break
@@ -79,4 +89,6 @@ func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.Roule
 	}
 
 	halt.StopListenForHalt()
+
+	doneTargetCh <- struct{}{}
 }

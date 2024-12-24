@@ -1,15 +1,16 @@
 package game
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"image"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"time"
+
+	"elem.com/roulette/utils"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/otiai10/gosseract/v2"
@@ -104,8 +105,33 @@ func NewNumberArea(bounds image.Rectangle) *NumberArea {
 	}
 }
 
+func (n *NumberArea) ReadNumber(ch chan int) {
+	for {
+		time.Sleep(800 * time.Millisecond)
+
+		number, err := n.captureNumber()
+		if err != nil {
+			if errors.Is(err, ErrNoNumber) {
+				// fmt.Println("-")
+				continue
+			}
+
+			if errors.Is(err, ErrWrongColor) {
+				fmt.Printf("\033[41m%v\033[0m\n", err)
+				continue
+			}
+
+			fmt.Printf("\033[41mError capturing number: %v\033[0m\n", err)
+			continue
+		}
+
+		ch <- number
+		break
+	}
+}
+
 // CaptureNumber captures a screenshot of the specified region and performs OCR to extract a number
-func (n *NumberArea) CaptureNumber() (int, error) {
+func (n *NumberArea) captureNumber() (int, error) {
 	img, err := robotgo.CaptureImg(
 		n.bounds.Min.X,
 		n.bounds.Min.Y,
@@ -120,7 +146,9 @@ func (n *NumberArea) CaptureNumber() (int, error) {
 		return 0, fmt.Errorf("error getting color: %w", err)
 	}
 
-	return processImage(img, color, false)
+	procImg := processImage(img, color)
+
+	return extractNumber(procImg, color)
 }
 
 func (n *NumberArea) getColor(img image.Image) (Color, error) {
@@ -166,17 +194,21 @@ func (n *NumberArea) getColor(img image.Image) (Color, error) {
 	return ColorBlack, nil
 }
 
-func processImage(img image.Image, color Color, invert bool) (int, error) {
+func processImage(img image.Image, color Color) image.Image {
 	if color == ColorBlack {
 		// Inverted make the number more readable for OCR (black on white)
-		img = invertImage(img)
+		img = utils.ProcessBlack(img)
 	}
 
 	if color == ColorRed {
 		// Turn it black on white background
-		img = blackWhiteImage(img)
+		img = utils.ProcessRed(img)
 	}
 
+	return img
+}
+
+func extractNumber(img image.Image, color Color) (int, error) {
 	// Only 0 is green
 	if color == ColorGreen {
 		return 0, nil
@@ -195,73 +227,26 @@ func processImage(img image.Image, color Color, invert bool) (int, error) {
 
 	number, err := strconv.Atoi(text)
 	if err != nil {
-		return handleFailNumber(img, text, invert, "error parsing number")
+		return handleFailNumber(img, text, color, "error parsing number")
 	}
 
 	if err := validateNumber(number, color); err != nil {
-		return handleFailNumber(img, text, invert, "error validating number")
+		return handleFailNumber(img, text, color, "error validating number")
 	}
 
-	if err := saveNumber(img, resultImgFolder, text, invert, true); err != nil {
+	if err := saveNumber(img, resultImgFolder, text); err != nil {
 		fmt.Printf("error saving number: %v", err)
 	}
 
 	return number, nil
 }
 
-func handleFailNumber(img image.Image, text string, invert bool, errText string) (int, error) {
-	if err := saveNumber(img, failedImgFolder, text, invert, false); err != nil {
+func handleFailNumber(img image.Image, text string, color Color, errText string) (int, error) {
+	if err := saveNumber(img, failedImgFolder, text); err != nil {
 		log.Printf("error saving number: %v", err)
 	}
 
 	return 0, fmt.Errorf("%s: %w", errText, ErrNoNumber)
-}
-
-func invertImage(img image.Image) image.Image {
-	bounds := img.Bounds()
-	inverted := image.NewRGBA(bounds)
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := img.At(x, y).RGBA()
-			// Convert from 16-bit to 8-bit color components and invert
-			i := (y-bounds.Min.Y)*inverted.Stride + (x-bounds.Min.X)*4
-			inverted.Pix[i+0] = uint8(255 - (r >> 8)) // R
-			inverted.Pix[i+1] = uint8(255 - (g >> 8)) // G
-			inverted.Pix[i+2] = uint8(255 - (b >> 8)) // B
-			inverted.Pix[i+3] = uint8(a >> 8)         // A
-		}
-	}
-
-	return inverted
-}
-
-func blackWhiteImage(img image.Image) image.Image {
-	bounds := img.Bounds()
-	bw := image.NewRGBA(bounds)
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, _ := img.At(x, y).RGBA()
-
-			// Calculate brightness - if close to white (high values), convert to black
-			brightness := (r + g + b) / 3
-			var pixel uint8
-			if brightness > 51400 { // Threshold for "close to white" (200)
-				pixel = 0 // Black
-			} else {
-				pixel = 255 // White
-			}
-
-			i := (y-bounds.Min.Y)*bw.Stride + (x-bounds.Min.X)*4
-			bw.Pix[i+0] = pixel // R
-			bw.Pix[i+1] = pixel // G
-			bw.Pix[i+2] = pixel // B
-			bw.Pix[i+3] = 255   // A (fully opaque)
-		}
-	}
-
-	return bw
 }
 
 // Validates the number matches the expected color
@@ -275,57 +260,19 @@ func validateNumber(number int, color Color) error {
 	return nil
 }
 
-func saveNumber(img image.Image, folder string, number string, invert bool, valid bool) error {
-	suffix := ""
-	if invert {
-		suffix = "_X"
-	}
-	if !valid {
-		suffix += "_I"
-	}
-
+func saveNumber(img image.Image, folder string, number string) error {
 	// Ensure directory exists
 	var dir = fmt.Sprintf("%s/%s", outputDir, folder)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		log.Fatalf("error creating output directory: %v", err)
 	}
 
-	// randStr := fmt.Sprintf("%x", rand.Int31())
-	hash := sha256.New()
-	bounds := img.Bounds()
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, _ := img.At(x, y).RGBA()
-			hash.Write([]byte{byte(r), byte(g), byte(b)})
-		}
-	}
-	randStr := hex.EncodeToString(hash.Sum(nil))[:8]
+	randStr := fmt.Sprintf("%x", rand.Int31())
+	filename := fmt.Sprintf("%d_%s_%s.png", time.Now().UnixMilli(), number, randStr)
 
-	filename := fmt.Sprintf("%d_%s%s_%s.png", time.Now().UnixMilli(), number, suffix, randStr)
-
-	img = removeAlpha(img)
-
-	// Saving it to png makes it fully transparent, so using jpeg.
-	if err := robotgo.SavePng(img, fmt.Sprintf("%s/%s", dir, filename)); err != nil {
+	if err := robotgo.SaveJpeg(img, fmt.Sprintf("%s/%s", dir, filename)); err != nil {
 		return fmt.Errorf("error saving number: %w", err)
 	}
 
 	return nil
-}
-
-func removeAlpha(img image.Image) image.Image {
-	if _, _, _, a := img.At(0, 0).RGBA(); a == 255 {
-		return img
-	}
-
-	bounds := img.Bounds()
-	rgba := image.NewRGBA(bounds)
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			rgba.Set(x, y, img.At(x, y))
-		}
-	}
-
-	return rgba
 }

@@ -70,6 +70,10 @@ func (g *GameState) RequestNumber() error {
 	return nil
 }
 
+func (g *GameState) WaitForNumber(ch <-chan int) {
+	g.lastDrawn = <-ch
+}
+
 func (g *GameState) UpdateSettings() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("\n\n---\nMáximo de proteção (atual: %d): ", g.maxProtection)

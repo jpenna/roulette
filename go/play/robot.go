@@ -8,7 +8,7 @@ import (
 	"elem.com/roulette/robot"
 )
 
-func runRobot(g *game.GameState, ch chan<- []int, window *robot.Window) {
+func runRobot(g *game.GameState, ch chan<- []int, window *robot.Window, numCh <-chan int) {
 	for {
 		err := g.RequestNumber()
 		if err != nil {
@@ -18,10 +18,21 @@ func runRobot(g *game.GameState, ch chan<- []int, window *robot.Window) {
 			continue
 		}
 
+		if numCh != nil {
+			g.WaitForNumber(numCh)
+		} else {
+			err := g.RequestNumber()
+			if err != nil {
+				fmt.Print("\033[41m")
+				fmt.Print("Por favor, insira um número válido")
+				fmt.Print("\033[0m\n")
+				continue
+			}
+		}
+
 		g.ComputeWinsAndLosses()
 
-		err = g.GetBets()
-		if err != nil {
+		if err := g.GetBets(); err != nil {
 			fmt.Print("\033[41m")
 			fmt.Print("Por favor, insira um número válido")
 			fmt.Print("\033[0m\n")

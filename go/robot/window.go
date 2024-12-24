@@ -37,8 +37,6 @@ func (w *Window) CaptureSize() {
 
 	fmt.Println("Superior esquerdo: ", w.TopLeft)
 	fmt.Println("Inferior direito: ", w.BottomRight)
-
-	w.SetNumberArea()
 }
 
 func (w *Window) SetReadyBarPosition(offset int) {
@@ -49,6 +47,10 @@ func (w *Window) SetReadyBarPosition(offset int) {
 		w.TopLeft[1] + int(float64(height)*0.5084) + offset, // Found position
 	}
 
+	w.confirmReadyBar()
+}
+
+func (w *Window) confirmReadyBar() {
 	MoveTo(w.ReadyBarPosition[0], w.ReadyBarPosition[1])
 
 	fmt.Print("O mouse está sobre a barra de PRONTO? (`y` para continuar): ")
@@ -58,10 +60,6 @@ func (w *Window) SetReadyBarPosition(offset int) {
 
 	if input == "y" {
 		fmt.Println("Barra de PRONTO encontrada")
-		return
-	}
-
-	if input == "y" {
 		return
 	}
 
