@@ -9,10 +9,12 @@ import (
 )
 
 func MatchNumbers() {
+
 	window := Window{
-		TopLeft:     [2]int{61, 1273},
-		BottomRight: [2]int{2638, 2725},
+		// TopLeft:     [2]int{4151, 348},
+		// BottomRight: [2]int{5800, 1268},
 	}
+	window.CaptureSize()
 	window.SetNumberArea()
 
 	numberArea := game.NewNumberArea(window.NumberArea)

@@ -41,3 +41,12 @@ func printBetsFor(x int) {
 	log.Printf("\nTargets for %d: %v", x, targets)
 	log.Printf("Bets for %d: %v\n\n", x, bets)
 }
+
+func allLogsToFile(filename string) {
+	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Printf("error opening log file: %v\n", err)
+		return
+	}
+	log.SetOutput(logFile)
+}

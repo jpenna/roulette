@@ -42,6 +42,7 @@ func main() {
 		log.Println("Confirme que o número vizinho é 1.")
 		play.Play()
 	case "--find-number":
+		// logToFile("number.log")
 		robot.MatchNumbers()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
@@ -49,14 +50,14 @@ func main() {
 }
 
 func runSimulations() {
-	list := simulation.Combined1
+	list := simulation.Combined2
 	chipValue := 2.5
 
 	sum0 := 0.0
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 200
+	sliceSize := 50
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize
