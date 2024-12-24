@@ -19,6 +19,7 @@ type Window struct {
 	ReadyBarPosition [2]int
 
 	NumberArea image.Rectangle
+	WinArea    image.Rectangle
 }
 
 func (w *Window) CaptureSize() {
@@ -73,19 +74,25 @@ func (w *Window) confirmReadyBar() {
 	w.SetReadyBarPosition(offset)
 }
 
-func (w *Window) SetNumberArea() {
+func (w *Window) SetNumberAreas() {
 	width := w.BottomRight[0] - w.TopLeft[0]
 	height := w.BottomRight[1] - w.TopLeft[1]
 
-	topLeftX := w.TopLeft[0] + int(float64(width)*0.473919523)
-	topLeftY := w.TopLeft[1] + int(float64(height)*0.276257723)
+	topLeftX := w.TopLeft[0] + int(float64(width)*0.47)
+	topLeftY := w.TopLeft[1] + int(float64(height)*0.27)
 
-	bottomRightX := w.TopLeft[0] + int(float64(width)*0.52260308)
-	bottomRightY := w.TopLeft[1] + int(float64(height)*0.355692851)
+	bottomRightX := w.TopLeft[0] + int(float64(width)*0.52)
+	bottomRightY := w.TopLeft[1] + int(float64(height)*0.35)
 
 	w.NumberArea = image.Rectangle{
 		Min: image.Point{X: topLeftX, Y: topLeftY},
 		Max: image.Point{X: bottomRightX, Y: bottomRightY},
+	}
+
+	diffY := bottomRightY - topLeftY
+	w.WinArea = image.Rectangle{
+		Min: image.Point{X: topLeftX, Y: topLeftY - diffY},
+		Max: image.Point{X: bottomRightX, Y: bottomRightY - diffY},
 	}
 }
 

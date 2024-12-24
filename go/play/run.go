@@ -6,9 +6,9 @@ import (
 	"elem.com/roulette/game"
 )
 
-func run(g *game.GameState, ch chan<- []int) {
+func run(g *game.GameState, targetCh chan<- []int, numCh chan int) {
 	for {
-		err := g.RequestNumber()
+		err := g.RequestNumber(numCh)
 		if err != nil {
 			fmt.Print("\033[41m")
 			fmt.Print("Por favor, insira um número válido")
@@ -28,6 +28,6 @@ func run(g *game.GameState, ch chan<- []int) {
 
 		g.PrintTargets()
 
-		ch <- g.GetTargets()
+		targetCh <- g.GetTargets()
 	}
 }

@@ -47,7 +47,7 @@ func IsReadyToBet(x, y int) (bool, error) {
 	pixel := img.At(0, 0)
 	r, g, b, _ := pixel.RGBA()
 
-	greenMargin := g - 50 // 50 is the margin of error
+	greenMargin := g - 12850 // 50 is the margin of error
 
 	// Check if green component is significantly higher than red and blue
 	return greenMargin > r && greenMargin > b, nil

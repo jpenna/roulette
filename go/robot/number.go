@@ -7,18 +7,20 @@ import (
 )
 
 func MatchNumbers() {
-
-	window := Window{
-		// TopLeft:     [2]int{4151, 348},
-		// BottomRight: [2]int{5800, 1268},
-	}
+	window := Window{}
 	window.CaptureSize()
-	window.SetNumberArea()
+	window.SetNumberAreas()
 
-	numberArea := game.NewNumberArea(window.NumberArea)
+	numberArea, winArea := game.NewDrawnAreas(window.NumberArea, window.WinArea)
 
 	numberCh := make(chan int)
-	go numberArea.ReadNumber(numberCh)
+
+	// Start a single goroutine that continuously reads numbers
+	go func() {
+		for {
+			game.ReadNumber(numberCh, numberArea, winArea)
+		}
+	}()
 
 	for number := range numberCh {
 		fmt.Println("Number:", number)

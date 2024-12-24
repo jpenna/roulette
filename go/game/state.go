@@ -39,39 +39,65 @@ func (g *GameState) GetTargets() []int {
 	return g.targets
 }
 
-func (g *GameState) RequestNumber() error {
-	reader := bufio.NewReader(os.Stdin)
+var isListeningForInput = false
+
+func (g *GameState) RequestNumber(numCh chan int) error {
 	fmt.Print("Último número sorteado: ")
-	input, _ := reader.ReadString('\n')
 
-	input = strings.TrimSpace(input)
+	inputCh := make(chan string)
+	errCh := make(chan error)
 
-	if input == "u" {
-		err := g.UpdateSettings()
-		if err != nil {
-			return fmt.Errorf("error updating settings: %w", err)
+	if !isListeningForInput {
+		// Start goroutine to read from stdin
+		go func() {
+			isListeningForInput = true
+
+			var input string
+			_, err := fmt.Scanln(&input)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			inputCh <- strings.TrimSpace(input)
+
+			isListeningForInput = false
+		}()
+	}
+
+	// Wait for either channel input or stdin
+	select {
+	// FIXME if input, stop looking for number on the screen
+	case input := <-inputCh:
+		if input == "u" {
+			err := g.UpdateSettings()
+			if err != nil {
+				return fmt.Errorf("error updating settings: %w", err)
+			}
+			return g.RequestNumber(numCh)
 		}
-		return g.RequestNumber()
+
+		if input == "p" {
+			log.Println()
+			g.PrintFullGameState()
+			return g.RequestNumber(numCh)
+		}
+
+		num, err := strconv.Atoi(input)
+		if err != nil {
+			return fmt.Errorf("error getting number: %w", err)
+		}
+
+		g.lastDrawn = num
+		return nil
+
+	case err := <-errCh:
+		return fmt.Errorf("error reading input: %w", err)
+
+	case num := <-numCh:
+		fmt.Println(num)
+		g.lastDrawn = num
+		return nil
 	}
-
-	if input == "p" {
-		log.Println()
-		g.PrintFullGameState()
-		return g.RequestNumber()
-	}
-
-	num, err := strconv.Atoi(input)
-	if err != nil {
-		return fmt.Errorf("error getting number: %w", err)
-	}
-
-	g.lastDrawn = num
-
-	return nil
-}
-
-func (g *GameState) WaitForNumber(ch <-chan int) {
-	g.lastDrawn = <-ch
 }
 
 func (g *GameState) UpdateSettings() error {

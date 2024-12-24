@@ -51,7 +51,7 @@ const (
 	ColorBlack
 )
 
-type NumberArea struct {
+type DrawnArea struct {
 	bounds image.Rectangle
 	points []image.Point
 }
@@ -70,7 +70,14 @@ func init() {
 	}
 }
 
-func NewNumberArea(bounds image.Rectangle) *NumberArea {
+func NewDrawnAreas(numBounds image.Rectangle, winBounds image.Rectangle) (numberArea *DrawnArea, winArea *DrawnArea) {
+	numberArea = buildDrawArea(numBounds)
+	winArea = buildDrawArea(winBounds)
+
+	return
+}
+
+func buildDrawArea(bounds image.Rectangle) *DrawnArea {
 	width := bounds.Dx()
 	height := bounds.Dy()
 
@@ -99,30 +106,25 @@ func NewNumberArea(bounds image.Rectangle) *NumberArea {
 		}
 	}
 
-	return &NumberArea{
+	return &DrawnArea{
 		bounds: bounds,
 		points: points,
 	}
 }
 
-func (n *NumberArea) ReadNumber(ch chan int) {
+func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 	for {
-		time.Sleep(800 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 
-		number, err := n.captureNumber()
+		number, err := numberArea.captureNumber()
 		if err != nil {
-			if errors.Is(err, ErrNoNumber) {
-				// fmt.Println("-")
+			handleFailNumber(err)
+
+			number, err = winArea.captureNumber()
+			if err != nil {
+				handleFailNumber(err)
 				continue
 			}
-
-			if errors.Is(err, ErrWrongColor) {
-				fmt.Printf("\033[41m%v\033[0m\n", err)
-				continue
-			}
-
-			fmt.Printf("\033[41mError capturing number: %v\033[0m\n", err)
-			continue
 		}
 
 		ch <- number
@@ -130,8 +132,22 @@ func (n *NumberArea) ReadNumber(ch chan int) {
 	}
 }
 
+func handleFailNumber(err error) {
+	if errors.Is(err, ErrNoNumber) {
+		// fmt.Println("-")
+		return
+	}
+
+	if errors.Is(err, ErrWrongColor) {
+		fmt.Printf("\033[41m%v\033[0m\n", err)
+		return
+	}
+
+	fmt.Printf("\033[41mError capturing number: %v\033[0m\n", err)
+}
+
 // CaptureNumber captures a screenshot of the specified region and performs OCR to extract a number
-func (n *NumberArea) captureNumber() (int, error) {
+func (n *DrawnArea) captureNumber() (int, error) {
 	img, err := robotgo.CaptureImg(
 		n.bounds.Min.X,
 		n.bounds.Min.Y,
@@ -151,7 +167,7 @@ func (n *NumberArea) captureNumber() (int, error) {
 	return extractNumber(procImg, color)
 }
 
-func (n *NumberArea) getColor(img image.Image) (Color, error) {
+func (n *DrawnArea) getColor(img image.Image) (Color, error) {
 	// Initialize color to first pixel
 	var color [3]uint32
 	color[0], color[1], color[2], _ = img.At(0, 0).RGBA()
@@ -227,11 +243,11 @@ func extractNumber(img image.Image, color Color) (int, error) {
 
 	number, err := strconv.Atoi(text)
 	if err != nil {
-		return handleFailNumber(img, text, color, "error parsing number")
+		return handleFailValue(img, text, "error parsing number")
 	}
 
 	if err := validateNumber(number, color); err != nil {
-		return handleFailNumber(img, text, color, "error validating number")
+		return handleFailValue(img, text, "error validating number")
 	}
 
 	if err := saveNumber(img, resultImgFolder, text); err != nil {
@@ -241,7 +257,7 @@ func extractNumber(img image.Image, color Color) (int, error) {
 	return number, nil
 }
 
-func handleFailNumber(img image.Image, text string, color Color, errText string) (int, error) {
+func handleFailValue(img image.Image, text string, errText string) (int, error) {
 	if err := saveNumber(img, failedImgFolder, text); err != nil {
 		log.Printf("error saving number: %v", err)
 	}

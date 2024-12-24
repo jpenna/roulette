@@ -22,7 +22,7 @@ func main() {
 		log.SetFlags(0)
 		runSimulations()
 		return
-	case "--play-terminal":
+	case "--terminal":
 		log.SetFlags(0)
 		gState := game.NewGameState(2)
 		play.RunTerminal(gState)
@@ -30,18 +30,16 @@ func main() {
 	case "--bets":
 		log.SetFlags(0)
 		printBets()
-	case "--robot":
-		play.Play()
 	case "--build-map":
 		robot.NewRouletteMap("roulette.json")
-	case "--mouse-position":
+	case "--mouse":
 		robot.MousePosition()
-	case "--play-robot":
+	case "--auto":
 		log.SetFlags(0)
 		log.Println("Iniciando bot...")
 		log.Println("Confirme que o número vizinho é 1.")
 		play.Play()
-	case "--find-number":
+	case "--number":
 		// logToFile("number.log")
 		robot.MatchNumbers()
 	default:
@@ -57,7 +55,7 @@ func runSimulations() {
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 50
+	sliceSize := 100
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize

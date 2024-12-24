@@ -12,8 +12,9 @@ import (
 
 func RunTerminal(g *game.GameState) {
 	ch := make(chan []int)
+	numCh := make(chan int)
 
-	go run(g, ch)
+	go run(g, ch, numCh)
 
 	for range ch {
 	}
@@ -23,7 +24,7 @@ func Play() {
 	window := robot.Window{}
 	window.CaptureSize()
 	window.SetReadyBarPosition(0)
-	window.SetNumberArea()
+	window.SetNumberAreas()
 	window.CaptureTerminal()
 
 	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
@@ -35,7 +36,7 @@ func Play() {
 	maxProtection := requestProtection()
 	gState := game.NewGameState(maxProtection)
 
-	numberArea := game.NewNumberArea(window.NumberArea)
+	numberArea, winArea := game.NewDrawnAreas(window.NumberArea, window.WinArea)
 
 	targetCh := make(chan []int)
 	numCh := make(chan int)
@@ -44,7 +45,13 @@ func Play() {
 	doneCh := make(chan struct{})
 
 	// Listen for the first number
-	go numberArea.ReadNumber(numCh)
+	go func() {
+		for {
+			game.ReadNumber(numCh, numberArea, winArea)
+			// The number is read, wait so it won't read again while the game is running
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
 	for targets := range targetCh {
 		halt.IsHalted.Store(false)
@@ -53,8 +60,6 @@ func Play() {
 		halt.ListenForHalt()
 
 		<-doneCh
-
-		go numberArea.ReadNumber(numCh)
 	}
 }
 
