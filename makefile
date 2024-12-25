@@ -3,32 +3,32 @@ install-air:
 
 # Run simulations
 simulate:
-	air -- --simulate
+	air -- --simulate $(ARGS)
 
 # Play the game in the terminal
 terminal:
-	go run . --play-terminal
+	go run . --play-terminal $(ARGS)
 
 # Print all bets for a given number
 bets:
-	go run . --bets
+	go run . --bets $(ARGS)
 
 # Build the roulette map
 build-map:
-	go run . --build-map
+	go run . --build-map $(ARGS)
 
 # Play the game with the robot
 auto:
-	go run . --play-auto
+	go run . --play-auto $(ARGS)
 
 # Print the mouse position
 mouse:
-	go run . --mouse
+	go run . --mouse $(ARGS)
 
 # Test capturing the drawn number
 number:
-	go run . --number
+	go run . --number $(ARGS)
 
 # Find duplicated bets
 duplicates:
-	go run . --find-duplicated-bets
+	go run . --find-duplicated-bets $(ARGS)

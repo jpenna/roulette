@@ -136,7 +136,7 @@ func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 
 func handleFailNumber(err error, area string) {
 	if errors.Is(err, ErrNoNumber) {
-		utils.Console.Trace().Msgf("- %s", area)
+		utils.Console.Debug().Msgf("- [%s]", area)
 		return
 	}
 
@@ -150,8 +150,6 @@ func handleFailNumber(err error, area string) {
 
 // CaptureNumber captures a screenshot of the specified region and performs OCR to extract a number
 func (n *DrawnArea) captureNumber() (int, error) {
-	utils.Console.Trace().Msgf("Capturing number from %s", n.bounds)
-
 	img, err := robotgo.CaptureImg(
 		n.bounds.Min.X,
 		n.bounds.Min.Y,

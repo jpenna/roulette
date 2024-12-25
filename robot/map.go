@@ -224,5 +224,6 @@ func (rm *RouletteMap) ClickNumber(number int) {
 		float64(area.BottomLeft[1])*(1-s)*t +
 		float64(area.BottomRight[1])*s*t)
 
+	utils.Console.Trace().Msgf("Clicking number %d at coordinates: %d, %d\n", number, x, y)
 	Click(x, y)
 }
