@@ -2,42 +2,51 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"elem.com/roulette/game"
 	"elem.com/roulette/play"
 	"elem.com/roulette/robot"
 	"elem.com/roulette/simulation"
+	"elem.com/roulette/utils"
+	"github.com/rs/zerolog"
 )
 
 func main() {
+	utils.SetLevel(zerolog.InfoLevel)
+
 	args := os.Args[1:]
 	if len(args) == 0 {
 		panic("No arguments provided. Use --simulate or --play")
 	}
 
+	if len(args) > 1 {
+		arg := args[1]
+		switch arg {
+		case "-v":
+			utils.SetLevel(zerolog.DebugLevel)
+		case "-vv":
+			utils.SetLevel(zerolog.TraceLevel)
+		}
+	}
+
 	switch args[0] {
 	case "--simulate":
-		log.SetFlags(0)
 		runSimulations()
 		return
 	case "--terminal":
-		log.SetFlags(0)
 		gState := game.NewGameState(2)
 		play.RunTerminal(gState)
 		return
 	case "--bets":
-		log.SetFlags(0)
 		printBets()
 	case "--build-map":
 		robot.NewRouletteMap("roulette.json")
 	case "--mouse":
 		robot.MousePosition()
 	case "--play-auto":
-		log.SetFlags(0)
-		log.Println("Iniciando bot...")
-		log.Println("Confirme que o número vizinho é 1.")
+		utils.Console.Info().Msg("Iniciando bot...")
+		utils.Console.Info().Msg("Confirme que o número vizinho é 1.")
 		play.Play()
 	case "--number":
 		// logToFile("number.log")

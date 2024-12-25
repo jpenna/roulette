@@ -134,16 +134,16 @@ func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 
 func handleFailNumber(err error) {
 	if errors.Is(err, ErrNoNumber) {
-		fmt.Println("-")
+		utils.Console.Trace().Msg("-")
 		return
 	}
 
 	if errors.Is(err, ErrWrongColor) {
-		fmt.Printf("\033[41m%v\033[0m\n", err)
+		utils.Console.Err(err).Msg("error wrong color")
 		return
 	}
 
-	fmt.Printf("\033[41mError capturing number: %v\033[0m\n", err)
+	utils.Console.Err(err).Msg("error capturing number")
 }
 
 // CaptureNumber captures a screenshot of the specified region and performs OCR to extract a number
@@ -251,7 +251,7 @@ func extractNumber(img image.Image, color Color) (int, error) {
 	}
 
 	if err := saveNumber(img, resultImgFolder, text); err != nil {
-		fmt.Printf("error saving number: %v", err)
+		utils.Console.Err(err).Msg("error saving number")
 	}
 
 	return number, nil
@@ -259,7 +259,7 @@ func extractNumber(img image.Image, color Color) (int, error) {
 
 func handleFailValue(img image.Image, text string, errText string) (int, error) {
 	if err := saveNumber(img, failedImgFolder, text); err != nil {
-		log.Printf("error saving number: %v", err)
+		utils.Console.Err(err).Msg("error saving number")
 	}
 
 	return 0, fmt.Errorf("%s: %w", errText, ErrNoNumber)
@@ -280,7 +280,7 @@ func saveNumber(img image.Image, folder string, number string) error {
 	// Ensure directory exists
 	var dir = fmt.Sprintf("%s/%s", outputDir, folder)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		log.Fatalf("error creating output directory: %v", err)
+		utils.Console.Fatal().Msgf("error creating output directory: %v", err)
 	}
 
 	randStr := fmt.Sprintf("%x", rand.Int31())

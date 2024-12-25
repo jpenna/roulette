@@ -6,7 +6,6 @@ import (
 	"image"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/go-vgo/robotgo"
 )
@@ -79,10 +78,10 @@ func (w *Window) SetNumberAreas() {
 	width := w.BottomRight[0] - w.TopLeft[0]
 	height := w.BottomRight[1] - w.TopLeft[1]
 
-	topLeftX := w.TopLeft[0] + int(float64(width)*0.47)
-	topLeftY := w.TopLeft[1] + int(float64(height)*0.27)
+	topLeftX := w.TopLeft[0] + int(float64(width)*0.476)
+	topLeftY := w.TopLeft[1] + int(float64(height)*0.275)
 
-	bottomRightX := w.TopLeft[0] + int(float64(width)*0.52)
+	bottomRightX := w.TopLeft[0] + int(float64(width)*0.525)
 	bottomRightY := w.TopLeft[1] + int(float64(height)*0.35)
 
 	w.NumberArea = image.Rectangle{
@@ -96,25 +95,37 @@ func (w *Window) SetNumberAreas() {
 		Max: image.Point{X: bottomRightX, Y: bottomRightY - diffY},
 	}
 
-	for {
-		// window
-		MoveTo(w.TopLeft[0], w.TopLeft[1])
-		time.Sleep(1 * time.Second)
-		MoveTo(w.BottomRight[0], w.BottomRight[1])
-		time.Sleep(1 * time.Second)
+	// for {
+	// 	// // window
+	// 	// MoveTo(w.TopLeft[0], w.TopLeft[1])
+	// 	// time.Sleep(1 * time.Second)
+	// 	// MoveTo(w.BottomRight[0], w.BottomRight[1])
+	// 	// time.Sleep(1 * time.Second)
 
-		// number
-		MoveTo(w.NumberArea.Min.X, w.NumberArea.Min.Y)
-		time.Sleep(1 * time.Second)
-		MoveTo(w.NumberArea.Max.X, w.NumberArea.Max.Y)
-		time.Sleep(1 * time.Second)
+	// 	// number
+	// 	MoveTo(w.NumberArea.Min.X, w.NumberArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.NumberArea.Max.X, w.NumberArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.NumberArea.Max.X, w.NumberArea.Max.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.NumberArea.Min.X, w.NumberArea.Max.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.NumberArea.Min.X, w.NumberArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
 
-		// win
-		MoveTo(w.WinArea.Min.X, w.WinArea.Min.Y)
-		time.Sleep(1 * time.Second)
-		MoveTo(w.WinArea.Max.X, w.WinArea.Max.Y)
-		time.Sleep(1 * time.Second)
-	}
+	// 	// win
+	// 	MoveTo(w.WinArea.Min.X, w.WinArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.WinArea.Max.X, w.WinArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.WinArea.Max.X, w.WinArea.Max.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.WinArea.Min.X, w.WinArea.Max.Y)
+	// 	time.Sleep(1 * time.Second)
+	// 	MoveTo(w.WinArea.Min.X, w.WinArea.Min.Y)
+	// 	time.Sleep(1 * time.Second)
+	// }
 }
 
 func (w *Window) CaptureTerminal() {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"elem.com/roulette/game"
+	"elem.com/roulette/utils"
 )
 
 func Run(numbers []int, bet float64, protection int) float64 {
@@ -93,7 +94,7 @@ func play(numbers []int, protection int) []bool {
 		if wonPrev || usedCount > protection {
 			_, bets, err := game.GetAllBets(previous)
 			if err != nil {
-				fmt.Printf("Warning: %v\n", err)
+				utils.Console.Warn().Err(err).Msg("warning: error getting all bets")
 				continue
 			}
 			curBets = bets

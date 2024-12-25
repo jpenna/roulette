@@ -3,7 +3,6 @@ package game
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"slices"
 	"strconv"
@@ -77,7 +76,7 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 		}
 
 		if input == "p" {
-			log.Println()
+			fmt.Println()
 			g.PrintFullGameState()
 			return g.RequestNumber(numCh)
 		}
@@ -114,7 +113,7 @@ func (g *GameState) UpdateSettings() error {
 
 	g.maxProtection = num
 
-	log.Printf("Proteção atualizada para %d\n---\n\n", g.maxProtection)
+	fmt.Printf("Proteção atualizada para %d\n---\n\n", g.maxProtection)
 
 	return nil
 }
@@ -140,9 +139,9 @@ func (g *GameState) ComputeWinsAndLosses() {
 
 	message := fmt.Sprintf("\nJogo %d: %d vitórias, %d derrotas (%.1f%%)", g.gameNumber, g.wins, g.losses, float32(g.wins*100)/float32(g.gameNumber))
 	if g.wonLast {
-		log.Printf("\033[32m%s\033[0m\n\n---\n\n", message)
+		fmt.Printf("\033[32m%s\033[0m\n\n---\n\n", message)
 	} else {
-		log.Printf("\033[31m%s\033[0m\n\n---\n\n", message)
+		fmt.Printf("\033[31m%s\033[0m\n\n---\n\n", message)
 	}
 }
 
@@ -174,25 +173,25 @@ func (g *GameState) PrintTargets() {
 	})
 
 	if g.usingProtection {
-		log.Printf("Usando proteção (%d / %d)\n", g.protectionCount, g.maxProtection)
-		log.Printf("\033[45mRepetir última aposta!\033[0m\n\n")
+		fmt.Printf("Usando proteção (%d / %d)\n", g.protectionCount, g.maxProtection)
+		fmt.Printf("\033[45mRepetir última aposta!\033[0m\n\n")
 	} else {
-		log.Printf("Alvos para %d:\n\n", g.lastDrawn)
+		fmt.Printf("Alvos para %d:\n\n", g.lastDrawn)
 
 		for _, t := range g.targets {
-			log.Printf("  %d (posição: %d)\n", t, roulette.RouletteNumberToIndex[t]+1)
+			fmt.Printf("  %d (posição: %d)\n", t, roulette.RouletteNumberToIndex[t]+1)
 		}
 
-		log.Println()
+		fmt.Println()
 	}
 }
 
 func (g *GameState) PrintFullGameState() {
-	log.Printf("\033[47m\033[30mJogo %d: %d vitórias, %d derrotas (%.1f%%)\033[0m\n", g.gameNumber, g.wins, g.losses, float32(g.wins*100)/float32(g.gameNumber))
-	log.Printf("\033[47m\033[30mProteção: %d / %d\033[0m\n", g.protectionCount, g.maxProtection)
-	log.Printf("\033[47m\033[30mProteção ativa: %t\033[0m\n", g.usingProtection)
-	log.Printf("\033[47m\033[30mÚltimo sorteado: %d\033[0m\n", g.lastDrawn)
-	log.Printf("\033[47m\033[30mAlvos: %v\033[0m\n", g.targets)
-	log.Printf("\033[47m\033[30mApostas: %v\033[0m\n", g.bets)
-	log.Println()
+	fmt.Printf("\033[47m\033[30mJogo %d: %d vitórias, %d derrotas (%.1f%%)\033[0m\n", g.gameNumber, g.wins, g.losses, float32(g.wins*100)/float32(g.gameNumber))
+	fmt.Printf("\033[47m\033[30mProteção: %d / %d\033[0m\n", g.protectionCount, g.maxProtection)
+	fmt.Printf("\033[47m\033[30mProteção ativa: %t\033[0m\n", g.usingProtection)
+	fmt.Printf("\033[47m\033[30mÚltimo sorteado: %d\033[0m\n", g.lastDrawn)
+	fmt.Printf("\033[47m\033[30mAlvos: %v\033[0m\n", g.targets)
+	fmt.Printf("\033[47m\033[30mApostas: %v\033[0m\n", g.bets)
+	fmt.Println()
 }

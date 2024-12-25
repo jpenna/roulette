@@ -12,12 +12,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"path"
 
 	"elem.com/roulette/roulette"
+	"elem.com/roulette/utils"
 	"github.com/go-vgo/robotgo"
 )
 
@@ -53,13 +53,13 @@ func NewRouletteMap(filename string) {
 
 	rouletteMap, err := buildRouletteMap(absolutePath)
 	if err != nil {
-		fmt.Println("Error building roulette map:", err)
+		utils.Console.Err(err).Msg("error building roulette map")
 		return
 	}
 
 	rouletteMap.saveToFile(absolutePath)
 
-	log.Println("Roulette map saved to", filename)
+	utils.Console.Info().Msgf("Roulette map saved to %s", filename)
 }
 
 // BuildRouletteMap creates a new roulette map by capturing the window region

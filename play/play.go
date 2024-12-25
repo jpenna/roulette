@@ -8,6 +8,7 @@ import (
 	"elem.com/roulette/game"
 	"elem.com/roulette/halt"
 	"elem.com/roulette/robot"
+	"elem.com/roulette/utils"
 )
 
 func RunTerminal(g *game.GameState) {
@@ -29,7 +30,7 @@ func Play() {
 
 	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
 	if err != nil {
-		fmt.Println("Error loading roulette map:", err)
+		utils.Console.Err(err).Msg("error loading roulette map")
 		return
 	}
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"elem.com/roulette/game"
+	"elem.com/roulette/utils"
 )
 
 func printBets() {
@@ -22,7 +23,7 @@ func printBets() {
 
 		num, err := strconv.Atoi(input)
 		if err != nil {
-			log.Println("Please enter a valid number")
+			fmt.Println("Please enter a valid number")
 			continue
 		}
 
@@ -33,7 +34,7 @@ func printBets() {
 func printBetsFor(x int) {
 	targets, bets, err := game.GetAllBets(x)
 	if err != nil {
-		log.Println("Error getting bets for ", x, ":", err)
+		utils.Console.Err(err).Msgf("Error getting bets for %d", x)
 	}
 
 	sort.Ints(bets)
@@ -45,7 +46,7 @@ func printBetsFor(x int) {
 func allLogsToFile(filename string) {
 	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		fmt.Printf("error opening log file: %v\n", err)
+		utils.Console.Err(err).Msg("error opening log file")
 		return
 	}
 	log.SetOutput(logFile)

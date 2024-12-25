@@ -9,9 +9,8 @@ import (
 func MatchNumbers() {
 	window := Window{
 		TopLeft:     [2]int{3863, 390},
-		BottomRight: [2]int{5996, 1590},
+		BottomRight: [2]int{5997, 1591},
 	}
-
 	// window.CaptureSize()
 	window.SetNumberAreas()
 
