@@ -7,14 +7,13 @@ import (
 	"elem.com/roulette/game"
 	"elem.com/roulette/play"
 	"elem.com/roulette/robot"
+	"elem.com/roulette/roulette"
 	"elem.com/roulette/simulation"
 	"elem.com/roulette/utils"
 	"github.com/rs/zerolog"
 )
 
 func main() {
-	utils.SetLevel(zerolog.InfoLevel)
-
 	args := os.Args[1:]
 	if len(args) == 0 {
 		panic("No arguments provided. Use --simulate or --play")
@@ -51,6 +50,8 @@ func main() {
 	case "--number":
 		// logToFile("number.log")
 		robot.MatchNumbers()
+	case "--find-duplicated-bets":
+		roulette.FindDuplicatedBets()
 	default:
 		panic("Invalid argument. Use --simulate or --play")
 	}

@@ -2,6 +2,7 @@ package robot
 
 import (
 	"fmt"
+	"time"
 
 	"elem.com/roulette/game"
 )
@@ -22,6 +23,9 @@ func MatchNumbers() {
 	go func() {
 		for {
 			game.ReadNumber(numberCh, numberArea, winArea)
+
+			// Comment this for manual testing
+			time.Sleep(10 * time.Second)
 		}
 	}()
 

@@ -4,6 +4,8 @@ import (
 	"slices"
 	"sort"
 	"testing"
+
+	"elem.com/roulette/roulette"
 )
 
 func TestGetAllBets(t *testing.T) {
@@ -65,7 +67,7 @@ func TestGetAllBets(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tgs, all, err := GetAllBets(tt.drawn)
+			tgs, all, err := roulette.GetAllBetsFor(tt.drawn)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("GetAllBets(%v) returned error: %v", tt.drawn, err)

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"elem.com/roulette/game"
+	"elem.com/roulette/roulette"
 	"elem.com/roulette/utils"
 )
 
@@ -32,7 +32,7 @@ func printBets() {
 }
 
 func printBetsFor(x int) {
-	targets, bets, err := game.GetAllBets(x)
+	targets, bets, err := roulette.GetAllBetsFor(x)
 	if err != nil {
 		utils.Console.Err(err).Msgf("Error getting bets for %d", x)
 	}

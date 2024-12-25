@@ -28,3 +28,7 @@ mouse:
 # Test capturing the drawn number
 number:
 	go run . --number
+
+# Find duplicated bets
+duplicates:
+	go run . --find-duplicated-bets

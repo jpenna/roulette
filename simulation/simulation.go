@@ -3,7 +3,7 @@ package simulation
 import (
 	"fmt"
 
-	"elem.com/roulette/game"
+	"elem.com/roulette/roulette"
 	"elem.com/roulette/utils"
 )
 
@@ -92,7 +92,7 @@ func play(numbers []int, protection int) []bool {
 		drawn := reversed[i+1]
 
 		if wonPrev || usedCount > protection {
-			_, bets, err := game.GetAllBets(previous)
+			_, bets, err := roulette.GetAllBetsFor(previous)
 			if err != nil {
 				utils.Console.Warn().Err(err).Msg("warning: error getting all bets")
 				continue

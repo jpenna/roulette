@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"elem.com/roulette/roulette"
+	"elem.com/roulette/utils"
 )
 
 type GameState struct {
@@ -49,6 +50,8 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 	if !isListeningForInput {
 		// Start goroutine to read from stdin
 		go func() {
+			utils.Console.Debug().Msg("Adding input listener")
+
 			isListeningForInput = true
 
 			var input string
@@ -68,6 +71,8 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 	// FIXME if input, stop looking for number on the screen
 	case input := <-inputCh:
 		if input == "u" {
+			utils.Console.Debug().Msg("Updating settings")
+
 			err := g.UpdateSettings()
 			if err != nil {
 				return fmt.Errorf("error updating settings: %w", err)
@@ -76,6 +81,8 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 		}
 
 		if input == "p" {
+			utils.Console.Debug().Msg("Printing full game state")
+
 			fmt.Println()
 			g.PrintFullGameState()
 			return g.RequestNumber(numCh)
@@ -86,6 +93,8 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 			return fmt.Errorf("error getting number: %w", err)
 		}
 
+		utils.Console.Debug().Msgf("Input drawn: %d", num)
+
 		g.lastDrawn = num
 		return nil
 
@@ -93,6 +102,8 @@ func (g *GameState) RequestNumber(numCh chan int) error {
 		return fmt.Errorf("error reading input: %w", err)
 
 	case num := <-numCh:
+		utils.Console.Debug().Msgf("Detected drawn: %d", num)
+
 		fmt.Println(num)
 		g.lastDrawn = num
 		return nil
@@ -148,7 +159,7 @@ func (g *GameState) ComputeWinsAndLosses() {
 func (g *GameState) GetBets() error {
 	// If it's the first game or we won last or protection is above max, get all bets
 	if g.gameNumber == 0 || (g.wonLast || g.protectionCount >= g.maxProtection) {
-		targets, bets, err := GetAllBets(g.lastDrawn)
+		targets, bets, err := roulette.GetAllBetsFor(g.lastDrawn)
 		if err != nil {
 			return fmt.Errorf("error getting bets: %w", err)
 		}

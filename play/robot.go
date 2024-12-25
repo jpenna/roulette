@@ -6,6 +6,7 @@ import (
 
 	"elem.com/roulette/game"
 	"elem.com/roulette/robot"
+	"elem.com/roulette/utils"
 )
 
 func runRobot(g *game.GameState, targetCh chan<- []int, window *robot.Window, numCh chan int) {
@@ -53,6 +54,8 @@ func waitReady(window *robot.Window, ch chan<- []int) {
 			close(ch)
 			return
 		}
+
+		utils.Console.Trace().Msgf("ready: %t", ready)
 
 		if ready {
 			break

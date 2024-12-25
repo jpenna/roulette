@@ -1,6 +1,9 @@
 package roulette
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 var betsMap = map[int][]int{
 	0:  {34, 14, 32, 10},
@@ -11,7 +14,7 @@ var betsMap = map[int][]int{
 	5:  {18, 6, 24, 2},
 	6:  {5, 20, 12, 17},
 	7:  {16, 14, 28, 4},
-	8:  {11, 28, 35, 31},
+	8:  {11, 28, 3, 31}, // Duplication: 3 instead of 35 (12 repeated)
 	9:  {31, 11, 6, 3},
 	10: {23, 20, 28, 19},
 	11: {8, 29, 31, 13},
@@ -24,8 +27,8 @@ var betsMap = map[int][]int{
 	18: {5, 6, 22, 19},
 	19: {16, 28, 21, 36},
 	20: {2, 20, 10, 6},
-	21: {21, 12, 19, 16},
-	22: {2, 17, 32, 18},
+	21: {2, 12, 19, 16}, // Duplication: 2 instead of 21 (4 repeated)
+	22: {2, 34, 32, 18}, // Duplication: 34 instead of 17 (25 repeated)
 	23: {32, 23, 7, 14},
 	24: {27, 22, 7, 26},
 	25: {27, 22, 2, 26},
@@ -33,13 +36,13 @@ var betsMap = map[int][]int{
 	27: {24, 25, 13, 26},
 	28: {8, 12, 19, 24},
 	29: {26, 11, 1, 18},
-	30: {14, 30, 36, 16},
-	31: {13, 22, 11, 28},
+	30: {14, 30, 13, 16}, // Duplication: 13 instead of 36 (11 repeated)
+	31: {27, 22, 11, 28}, // Duplication: 27 instead of 13 (36 repeated)
 	32: {23, 12, 22, 15},
 	33: {36, 31, 3, 1},
 	34: {0, 14, 34, 36},
 	35: {15, 12, 8, 9},
-	36: {16, 36, 1, 12},
+	36: {24, 36, 1, 12}, // Duplication: 24 instead of 16 (33 repeated)
 }
 
 func GetTargetBetsFor(number int) ([]int, error) {
@@ -53,4 +56,56 @@ func GetTargetBetsFor(number int) ([]int, error) {
 	}
 
 	return expected, nil
+}
+
+func GetAllBetsFor(drawn int) (targets []int, all []int, err error) {
+	targets, err = GetTargetBetsFor(drawn)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting expected for %d: %w", drawn, err)
+	}
+
+	for _, target := range targets {
+		index := RouletteNumberToIndex[target]
+
+		var prev, next int
+
+		prev = RouletteNumbers[func() int {
+			if index == 0 {
+				return len(RouletteNumbers) - 1
+			}
+			return index - 1
+		}()]
+
+		next = RouletteNumbers[func() int {
+			if index == len(RouletteNumbers)-1 {
+				return 0
+			}
+			return index + 1
+		}()]
+
+		all = append(all, prev, target, next)
+	}
+
+	return targets, all, nil
+}
+
+func FindDuplicatedBets() {
+	for key := range betsMap {
+		targets, all, err := GetAllBetsFor(key)
+		if err != nil {
+			fmt.Printf("Error processing number %d: %v\n", key, err)
+			continue
+		}
+
+		sort.Ints(all)
+
+		prev := -1
+		for _, num := range all {
+			// log.Printf("Processing number %d\n", num)
+			if prev == num {
+				fmt.Printf("%d: Number %d is repeated\n (target: %+v)\n", key, num, targets)
+			}
+			prev = num
+		}
+	}
 }

@@ -118,23 +118,25 @@ func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 
 		number, err := numberArea.captureNumber()
 		if err != nil {
-			handleFailNumber(err)
+			handleFailNumber(err, "number area")
 
 			number, err = winArea.captureNumber()
 			if err != nil {
-				handleFailNumber(err)
+				handleFailNumber(err, "win area")
 				continue
 			}
 		}
+
+		utils.Console.Debug().Msgf("Read number: %d", number)
 
 		ch <- number
 		break
 	}
 }
 
-func handleFailNumber(err error) {
+func handleFailNumber(err error, area string) {
 	if errors.Is(err, ErrNoNumber) {
-		utils.Console.Trace().Msg("-")
+		utils.Console.Trace().Msgf("- %s", area)
 		return
 	}
 
@@ -148,6 +150,8 @@ func handleFailNumber(err error) {
 
 // CaptureNumber captures a screenshot of the specified region and performs OCR to extract a number
 func (n *DrawnArea) captureNumber() (int, error) {
+	utils.Console.Trace().Msgf("Capturing number from %s", n.bounds)
+
 	img, err := robotgo.CaptureImg(
 		n.bounds.Min.X,
 		n.bounds.Min.Y,
@@ -161,6 +165,8 @@ func (n *DrawnArea) captureNumber() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("error getting color: %w", err)
 	}
+
+	utils.Console.Trace().Msgf("Color: %d", color)
 
 	procImg := processImage(img, color)
 
@@ -225,12 +231,15 @@ func processImage(img image.Image, color Color) image.Image {
 }
 
 func extractNumber(img image.Image, color Color) (int, error) {
+	utils.Console.Trace().Msg("Extracting number")
+
 	// Only 0 is green
 	if color == ColorGreen {
 		return 0, nil
 	}
 
 	// Tesseract doesn't work with []bits, I don't know why... Saving it to jpeg works.
+	// TODO save png?
 	robotgo.SaveJpeg(img, tmpVerifyImg)
 	if err := client.SetImage(tmpVerifyImg); err != nil {
 		return 0, fmt.Errorf("error setting image: %w", err)
@@ -241,10 +250,14 @@ func extractNumber(img image.Image, color Color) (int, error) {
 		return 0, fmt.Errorf("error performing OCR: %w", err)
 	}
 
+	utils.Console.Trace().Msgf("OCR text: %s", text)
+
 	number, err := strconv.Atoi(text)
 	if err != nil {
 		return handleFailValue(img, text, "error parsing number")
 	}
+
+	utils.Console.Trace().Msgf("Parsed number: %d", number)
 
 	if err := validateNumber(number, color); err != nil {
 		return handleFailValue(img, text, "error validating number")

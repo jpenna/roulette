@@ -50,7 +50,7 @@ func Play() {
 		for {
 			game.ReadNumber(numCh, numberArea, winArea)
 			// The number is read, wait so it won't read again while the game is running
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
 	}()
 

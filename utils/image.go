@@ -4,6 +4,8 @@ import "image"
 
 // ProcessBlack inverts the colors to make the number black on white background
 func ProcessBlack(img image.Image) image.Image {
+	Console.Trace().Msg("Processing black")
+
 	bounds := img.Bounds()
 	inverted := image.NewRGBA(bounds)
 
@@ -25,6 +27,8 @@ func ProcessBlack(img image.Image) image.Image {
 
 // ProcessRed adds a margin to the image, make it all black and white, then downscales it (worked better).
 func ProcessRed(img image.Image) image.Image {
+	Console.Trace().Msg("Processing red")
+
 	bounds := img.Bounds()
 
 	// Add margin
@@ -57,6 +61,8 @@ func ProcessRed(img image.Image) image.Image {
 }
 
 func biggerSize(img image.Image) (*image.RGBA, int, int) {
+	Console.Trace().Msg("Getting bigger size")
+
 	bounds := img.Bounds()
 	originalWidth := bounds.Dx()
 	originalHeight := bounds.Dy()
@@ -84,6 +90,8 @@ func biggerSize(img image.Image) (*image.RGBA, int, int) {
 }
 
 func downscaleImage(img image.Image) *image.RGBA {
+	Console.Trace().Msg("Downscaling image")
+
 	bounds := img.Bounds()
 	originalWidth := bounds.Dx()
 	originalHeight := bounds.Dy()

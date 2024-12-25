@@ -11,6 +11,7 @@ var Console zerolog.Logger
 
 func init() {
 	Console = log.Logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	SetLevel(zerolog.InfoLevel)
 }
 
 func SetLevel(level zerolog.Level) {
