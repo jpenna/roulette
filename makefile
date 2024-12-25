@@ -3,7 +3,7 @@ install-air:
 
 # Run simulations
 simulate:
-	air -- --simulate $(ARGS)
+	go run . --simulate $(ARGS)
 
 # Print all bets for a given number
 bets:

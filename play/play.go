@@ -11,16 +11,6 @@ import (
 	"elem.com/roulette/utils"
 )
 
-func RunTerminal(g *game.GameState) {
-	ch := make(chan []int)
-	numCh := make(chan int)
-
-	go run(g, ch, numCh)
-
-	for range ch {
-	}
-}
-
 func Play() {
 	window := robot.Window{}
 	window.CaptureSize()
@@ -41,18 +31,18 @@ func Play() {
 
 	targetCh := make(chan []int)
 	numCh := make(chan int)
-betCh := make(chan struct{})
+	betCh := make(chan struct{})
 	go runRobot(gState, targetCh, &window, numCh, betCh)
 
 	// Listen for the first number
 	go func() {
 		for {
 			found := game.ReadNumber(numCh, numberArea, winArea)
-if found {
+			if found {
 				utils.Console.Debug().Msgf("Number found")
-			// The number is read, wait so it won't read again while the game is running
-			time.Sleep(20 * time.Second)
-}
+				// The number is read, wait so it won't read again while the game is running
+				time.Sleep(20 * time.Second)
+			}
 		}
 	}()
 

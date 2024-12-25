@@ -23,9 +23,14 @@ func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 	pow := 0
 
 	worstLoss := 0.0
+	worstLossIndex := -1
 	lastLostIndex := -1
 	lastLostSeq := 0
 	lostSeq := 0
+	lostSeqIndex := -1
+
+	maxWin := 0.0
+	maxWinIndex := -1
 
 	matches := 0
 
@@ -39,6 +44,7 @@ func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 
 		if investment < worstLoss {
 			worstLoss = investment
+			worstLossIndex = i
 		}
 
 		if win {
@@ -57,6 +63,12 @@ func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 
 		if lastLostSeq > lostSeq {
 			lostSeq = lastLostSeq
+			lostSeqIndex = i
+		}
+
+		if investment > maxWin {
+			maxWin = investment
+			maxWinIndex = i
 		}
 	}
 
@@ -66,8 +78,11 @@ func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 	} else {
 		fmt.Printf("\033[31mVocê teria perdido R$ %.2f\033[0m\n", investment)
 	}
-	fmt.Printf("Pior cenário possível: R$ %.2f\n", worstLoss)
-	fmt.Printf("Maior sequência de perdas: %d\n", lostSeq)
+
+	fmt.Printf("Melhor cenário possível: R$ %.2f (%d)\n", maxWin, maxWinIndex+1)
+	fmt.Printf("Pior cenário possível: R$ %.2f (%d)\n", worstLoss, worstLossIndex+1)
+
+	fmt.Printf("Maior sequência de perdas: %d (%d)\n", lostSeq, lostSeqIndex+1)
 	fmt.Printf("---\n\n")
 
 	return investment

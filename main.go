@@ -53,14 +53,14 @@ func main() {
 }
 
 func runSimulations() {
-	list := simulation.Combined2
+	list := simulation.Combined3
 	chipValue := 2.5
 
 	sum0 := 0.0
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 100
+	sliceSize := 75
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize
