@@ -9,15 +9,13 @@ import (
 	"elem.com/roulette/utils"
 )
 
-func runRobot(g *game.GameState, targetCh chan<- []int, window *robot.Window, numCh chan int) {
+func runRobot(g *game.GameState, targetCh chan<- []int, window *robot.Window, numCh chan int, betCh chan struct{}) {
+	next := make(chan struct{})
+	go g.WaitDrawn(numCh, next, betCh)
+
 	for {
-		err := g.RequestNumber(numCh)
-		if err != nil {
-			fmt.Print("\033[41m")
-			fmt.Print("Por favor, insira um número válido")
-			fmt.Print("\033[0m\n")
-			continue
-		}
+		// Only start after the number is read
+		<-next
 
 		g.ComputeWinsAndLosses()
 

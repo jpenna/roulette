@@ -1,28 +1,37 @@
 package halt
 
 import (
-	"fmt"
 	"sync/atomic"
+	"time"
 
-	hook "github.com/robotn/gohook"
+	"elem.com/roulette/utils"
 )
 
-var IsHalted atomic.Bool
+var halted atomic.Bool
 
-func ListenForHalt() {
-	hook.Register(hook.KeyDown, []string{"s"}, func(e hook.Event) {
-		fmt.Print("\033[41m")
-		fmt.Print("\nJogada interrompida!")
-		fmt.Print("\033[0m\n")
+func Stop() {
+	if halted.Load() {
+		return
+	}
 
-		IsHalted.Store(true)
-	})
+	halted.Store(true)
 
-	s := hook.Start()
+	go func() {
+		for {
+			if !IsHalted() {
+				break
+			}
 
-	<-hook.Process(s)
+			utils.Console.Warn().Msg("Jogo interrompido, aguardando [c]ontinue...")
+			time.Sleep(10 * time.Second)
+		}
+	}()
 }
 
-func StopListenForHalt() {
-	hook.End()
+func Continue() {
+	halted.Store(false)
+}
+
+func IsHalted() bool {
+	return halted.Load()
 }

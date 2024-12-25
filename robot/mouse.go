@@ -58,7 +58,7 @@ func moveBezier(destX, destY int) {
 	// Move the mouse along the Bézier curve
 	count := 0 // Use count so it will end in the correct destination
 	for t := 0.0; count <= steps; t += 1.0 / float64(steps) {
-		if halt.IsHalted.Load() {
+		if halt.IsHalted() {
 			break
 		}
 

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"elem.com/roulette/halt"
 	"elem.com/roulette/roulette"
 	"elem.com/roulette/utils"
 )
@@ -39,75 +40,108 @@ func (g *GameState) GetTargets() []int {
 	return g.targets
 }
 
-var isListeningForInput = false
-
-func (g *GameState) RequestNumber(numCh chan int) error {
-	fmt.Print("Último número sorteado: ")
-
+func (g *GameState) WaitDrawn(numCh chan int, next chan<- struct{}, endBet <-chan struct{}) {
 	inputCh := make(chan string)
 	errCh := make(chan error)
 
-	if !isListeningForInput {
-		// Start goroutine to read from stdin
-		go func() {
-			utils.Console.Debug().Msg("Adding input listener")
+	go g.listenInput(inputCh, errCh)
 
-			isListeningForInput = true
+	go func() {
+		for {
+			fmt.Println("Último número sorteado (#, [p]rint, [u]pdate, [s]top, [c]ontinue): ")
+			<-endBet
+		}
+	}()
 
-			var input string
-			_, err := fmt.Scanln(&input)
-			if err != nil {
-				errCh <- err
-				return
+	for {
+		// Wait for either input or OCR
+		select {
+		case input := <-inputCh:
+			isNumber := g.handleInput(input)
+
+			if isNumber {
+				halt.Stop() // Stop processing to use the new number
+
+				go func() {
+					numCh <- g.lastDrawn
+				}()
 			}
-			inputCh <- strings.TrimSpace(input)
 
-			isListeningForInput = false
-		}()
+		case err := <-errCh:
+			utils.Console.Err(err).Msg("error reading input")
+
+		case num := <-numCh:
+			halt.Continue() // If a number is received, the game is resumed
+
+			utils.Console.Debug().Msgf("Detected drawn (or input): %d", num)
+
+			fmt.Println(num)
+			g.lastDrawn = num
+
+			next <- struct{}{}
+		}
 	}
+}
 
-	// Wait for either channel input or stdin
-	select {
-	// FIXME if input, stop looking for number on the screen
-	case input := <-inputCh:
-		if input == "u" {
-			utils.Console.Debug().Msg("Updating settings")
+func (g *GameState) listenInput(inputCh chan<- string, errCh chan error) {
+	for {
+		utils.Console.Debug().Msg("Adding input listener")
 
-			err := g.UpdateSettings()
-			if err != nil {
-				return fmt.Errorf("error updating settings: %w", err)
-			}
-			return g.RequestNumber(numCh)
+		var input string
+		_, err := fmt.Scanln(&input)
+		if err != nil {
+			errCh <- fmt.Errorf("error reading input: %w", err)
+			return
 		}
 
-		if input == "p" {
-			utils.Console.Debug().Msg("Printing full game state")
+		utils.Console.Trace().Msgf("Input: %s", input)
 
-			fmt.Println()
-			g.PrintFullGameState()
-			return g.RequestNumber(numCh)
+		inputCh <- strings.TrimSpace(input)
+
+		utils.Console.Debug().Msg("Removing input listener")
+	}
+}
+
+func (g *GameState) handleInput(input string) (isNumber bool) {
+	switch input {
+	case "u":
+		utils.Console.Debug().Msg("Updating settings")
+
+		err := g.UpdateSettings()
+		if err != nil {
+			utils.Console.Err(err).Msg("error updating settings")
 		}
 
+	case "p":
+		utils.Console.Debug().Msg("Printing full game state")
+
+		fmt.Println()
+		g.PrintFullGameState()
+
+	case "s":
+		utils.Console.Trace().Msgf("Stopping game")
+
+		halt.Stop()
+
+	case "c":
+		utils.Console.Trace().Msgf("Continuing game")
+
+		halt.Continue()
+
+	default:
 		num, err := strconv.Atoi(input)
 		if err != nil {
-			return fmt.Errorf("error getting number: %w", err)
+			utils.Console.Err(err).Msg("error getting number")
+			return false
 		}
 
 		utils.Console.Debug().Msgf("Input drawn: %d", num)
 
 		g.lastDrawn = num
-		return nil
-
-	case err := <-errCh:
-		return fmt.Errorf("error reading input: %w", err)
-
-	case num := <-numCh:
-		utils.Console.Debug().Msgf("Detected drawn: %d", num)
-
-		fmt.Println(num)
-		g.lastDrawn = num
-		return nil
+		return true
 	}
+
+	return false
 }
 
 func (g *GameState) UpdateSettings() error {

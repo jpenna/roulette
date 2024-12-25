@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"elem.com/roulette/game"
 	"elem.com/roulette/play"
 	"elem.com/roulette/robot"
 	"elem.com/roulette/roulette"
@@ -32,10 +31,6 @@ func main() {
 	switch args[0] {
 	case "--simulate":
 		runSimulations()
-		return
-	case "--terminal":
-		gState := game.NewGameState(2)
-		play.RunTerminal(gState)
 		return
 	case "--bets":
 		printBets()

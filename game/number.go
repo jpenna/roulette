@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"elem.com/roulette/halt"
 	"elem.com/roulette/utils"
 
 	"github.com/go-vgo/robotgo"
@@ -112,8 +113,14 @@ func buildDrawArea(bounds image.Rectangle) *DrawnArea {
 	}
 }
 
-func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
+func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) (found bool) {
 	for {
+		if halt.IsHalted() {
+			utils.Console.Trace().Msgf("ReadNumber halted, waiting for continue...")
+			time.Sleep(2 * time.Second)
+			break
+		}
+
 		time.Sleep(500 * time.Millisecond)
 
 		number, err := numberArea.captureNumber()
@@ -130,13 +137,15 @@ func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 		utils.Console.Debug().Msgf("Read number: %d", number)
 
 		ch <- number
-		break
+		return true
 	}
+
+	return false
 }
 
 func handleFailNumber(err error, area string) {
 	if errors.Is(err, ErrNoNumber) {
-		utils.Console.Debug().Msgf("- [%s]", area)
+		utils.Console.Trace().Msgf("- [%s]", area)
 		return
 	}
 

@@ -41,26 +41,24 @@ func Play() {
 
 	targetCh := make(chan []int)
 	numCh := make(chan int)
-	go runRobot(gState, targetCh, &window, numCh)
-
-	doneCh := make(chan struct{})
+betCh := make(chan struct{})
+	go runRobot(gState, targetCh, &window, numCh, betCh)
 
 	// Listen for the first number
 	go func() {
 		for {
-			game.ReadNumber(numCh, numberArea, winArea)
+			found := game.ReadNumber(numCh, numberArea, winArea)
+if found {
+				utils.Console.Debug().Msgf("Number found")
 			// The number is read, wait so it won't read again while the game is running
-			time.Sleep(10 * time.Second)
+			time.Sleep(20 * time.Second)
+}
 		}
 	}()
 
 	for targets := range targetCh {
-		halt.IsHalted.Store(false)
-
-		go selectTargets(targets, &window, rouletteMap, doneCh)
-		halt.ListenForHalt()
-
-		<-doneCh
+		selectTargets(targets, &window, rouletteMap)
+		betCh <- struct{}{}
 	}
 }
 
@@ -78,9 +76,9 @@ func requestProtection() int {
 	return maxProtection
 }
 
-func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.RouletteMap, doneTargetCh chan struct{}) {
+func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.RouletteMap) {
 	for _, target := range targets {
-		if halt.IsHalted.Load() {
+		if halt.IsHalted() {
 			break
 		}
 
@@ -90,11 +88,7 @@ func selectTargets(targets []int, window *robot.Window, rouletteMap *robot.Roule
 		time.Sleep(delay)
 	}
 
-	if !halt.IsHalted.Load() {
+	if !halt.IsHalted() {
 		window.ClickTerminal()
 	}
-
-	halt.StopListenForHalt()
-
-	doneTargetCh <- struct{}{}
 }

@@ -5,10 +5,6 @@ install-air:
 simulate:
 	air -- --simulate $(ARGS)
 
-# Play the game in the terminal
-terminal:
-	go run . --play-terminal $(ARGS)
-
 # Print all bets for a given number
 bets:
 	go run . --bets $(ARGS)
