@@ -19,12 +19,12 @@ build-map:
 
 # Play the game with the robot
 auto:
-	go run . --play-robot
+	go run . --play-auto
 
 # Print the mouse position
 mouse:
-	go run . --mouse-position
+	go run . --mouse
 
 # Test capturing the drawn number
 number:
-	go run . --find-number
+	go run . --number

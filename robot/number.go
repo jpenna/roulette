@@ -7,8 +7,12 @@ import (
 )
 
 func MatchNumbers() {
-	window := Window{}
-	window.CaptureSize()
+	window := Window{
+		TopLeft:     [2]int{3863, 390},
+		BottomRight: [2]int{5996, 1590},
+	}
+
+	// window.CaptureSize()
 	window.SetNumberAreas()
 
 	numberArea, winArea := game.NewDrawnAreas(window.NumberArea, window.WinArea)

@@ -34,7 +34,7 @@ func main() {
 		robot.NewRouletteMap("roulette.json")
 	case "--mouse":
 		robot.MousePosition()
-	case "--auto":
+	case "--play-auto":
 		log.SetFlags(0)
 		log.Println("Iniciando bot...")
 		log.Println("Confirme que o número vizinho é 1.")

@@ -134,7 +134,7 @@ func ReadNumber(ch chan int, numberArea *DrawnArea, winArea *DrawnArea) {
 
 func handleFailNumber(err error) {
 	if errors.Is(err, ErrNoNumber) {
-		// fmt.Println("-")
+		fmt.Println("-")
 		return
 	}
 

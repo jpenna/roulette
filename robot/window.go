@@ -6,6 +6,7 @@ import (
 	"image"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 )
@@ -93,6 +94,26 @@ func (w *Window) SetNumberAreas() {
 	w.WinArea = image.Rectangle{
 		Min: image.Point{X: topLeftX, Y: topLeftY - diffY},
 		Max: image.Point{X: bottomRightX, Y: bottomRightY - diffY},
+	}
+
+	for {
+		// window
+		MoveTo(w.TopLeft[0], w.TopLeft[1])
+		time.Sleep(1 * time.Second)
+		MoveTo(w.BottomRight[0], w.BottomRight[1])
+		time.Sleep(1 * time.Second)
+
+		// number
+		MoveTo(w.NumberArea.Min.X, w.NumberArea.Min.Y)
+		time.Sleep(1 * time.Second)
+		MoveTo(w.NumberArea.Max.X, w.NumberArea.Max.Y)
+		time.Sleep(1 * time.Second)
+
+		// win
+		MoveTo(w.WinArea.Min.X, w.WinArea.Min.Y)
+		time.Sleep(1 * time.Second)
+		MoveTo(w.WinArea.Max.X, w.WinArea.Max.Y)
+		time.Sleep(1 * time.Second)
 	}
 }
 
