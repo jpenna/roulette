@@ -12,6 +12,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
 	"math/rand"
 	"os"
 	"path"
@@ -21,18 +23,13 @@ import (
 	"github.com/go-vgo/robotgo"
 )
 
-// Area represents a rectangular region defined by 4 corners
-type Area struct {
-	TopLeft     [2]int `json:"top_left"`
-	TopRight    [2]int `json:"top_right"`
-	BottomLeft  [2]int `json:"bottom_left"`
-	BottomRight [2]int `json:"bottom_right"`
-}
-
 // RouletteMap stores the mapping of numbers to their areas on the screen
 type RouletteMap struct {
-	WindowRegion *Window      `json:"windowRegion"`
-	NumberAreas  map[int]Area `json:"numberAreas"`
+	WindowRegion *Window        `json:"windowRegion"`
+	Middle       map[int][2]int `json:"middle"`
+
+	MiddleAreas  map[int]image.Rectangle `json:"middleAreas"`
+	PixelsToSide int                     `json:"pixelsToSide"`
 }
 
 func UseRouletteMap(filename string, window *Window) (*RouletteMap, error) {
@@ -72,17 +69,20 @@ func buildRouletteMap(filename string) (*RouletteMap, error) {
 	// Initialize the map
 	rouletteMap := &RouletteMap{
 		WindowRegion: window,
-		NumberAreas:  make(map[int]Area),
+		Middle:       make(map[int][2]int),
+		MiddleAreas:  make(map[int]image.Rectangle),
 	}
 
 	reader := bufio.NewReader(os.Stdin)
+
+	rouletteMap.PixelsToSide = capturePixelsToSide(reader)
 
 	// For each number 0-36, capture the coordinates
 	for i := 0; i < len(roulette.RouletteNumbers); i++ {
 		num := roulette.RouletteNumbers[i]
 		fmt.Printf("\nCapturing coordinates for number %d\n", num)
-		area := captureArea(window, reader)
-		rouletteMap.NumberAreas[num] = area
+		middle := captureMiddle(window, reader)
+		rouletteMap.Middle[num] = middle
 
 		rouletteMap.saveToFile(filename)
 	}
@@ -90,35 +90,24 @@ func buildRouletteMap(filename string) (*RouletteMap, error) {
 	return rouletteMap, nil
 }
 
-// captureArea captures the 4 corners of an area from user input
-func captureArea(window *Window, reader *bufio.Reader) Area {
-	area := Area{}
+func capturePixelsToSide(reader *bufio.Reader) int {
+	fmt.Println("Put mouse to the LEFT of 6 and press Enter")
+	reader.ReadString('\n')
+	xLeft, _ := robotgo.Location()
 
-	fmt.Println("Position mouse at top-left corner and press Enter")
+	fmt.Println("Put mouse to the RIGHT of 6 and press Enter")
+	reader.ReadString('\n')
+	xRight, _ := robotgo.Location()
+
+	return xRight - xLeft
+}
+
+// captureMiddle captures the middle of the number
+func captureMiddle(window *Window, reader *bufio.Reader) [2]int {
+	fmt.Println("Position mouse in the middle and press Enter")
 	reader.ReadString('\n')
 	x, y := robotgo.Location()
-	area.TopLeft[0] = x - window.TopLeft[0]
-	area.TopLeft[1] = y - window.TopLeft[1]
-
-	fmt.Println("Position mouse at top-right corner and press Enter")
-	reader.ReadString('\n')
-	x, y = robotgo.Location()
-	area.TopRight[0] = x - window.TopLeft[0]
-	area.TopRight[1] = y - window.TopLeft[1]
-
-	fmt.Println("Position mouse at bottom-right corner and press Enter")
-	reader.ReadString('\n')
-	x, y = robotgo.Location()
-	area.BottomRight[0] = x - window.TopLeft[0]
-	area.BottomRight[1] = y - window.TopLeft[1]
-
-	fmt.Println("Position mouse at bottom-left corner and press Enter")
-	reader.ReadString('\n')
-	x, y = robotgo.Location()
-	area.BottomLeft[0] = x - window.TopLeft[0]
-	area.BottomLeft[1] = y - window.TopLeft[1]
-
-	return area
+	return [2]int{x - window.TopLeft[0], y - window.TopLeft[1]}
 }
 
 // SaveToFile saves the roulette map to a JSON file
@@ -154,39 +143,29 @@ func loadRouletteMap(filename string) (*RouletteMap, error) {
 
 // AdjustCoordinates returns the relative coordinates of a number based on the current window position
 func (rm *RouletteMap) adjustCoordinates(window *Window) error {
-	for number := range rm.NumberAreas {
-		adjustedArea, err := rm.adjustCoordinatesFor(window, number)
-		if err != nil {
-			return err
-		}
-		rm.NumberAreas[number] = *adjustedArea
-	}
-
-	return nil
-}
-
-func (rm *RouletteMap) adjustCoordinatesFor(window *Window, number int) (*Area, error) {
-	area, exists := rm.NumberAreas[number]
-	if !exists {
-		return nil, fmt.Errorf("number %d not found in roulette map", number)
-	}
-
 	// Calculate the offset between the original window position and current window position
-	offsetX := float64(window.TopLeft[0])
-	offsetY := float64(window.TopLeft[1])
+	offsetX := window.TopLeft[0]
+	offsetY := window.TopLeft[1]
 
 	scaleX := float64(window.BottomRight[0]-window.TopLeft[0]) / float64(rm.WindowRegion.BottomRight[0]-rm.WindowRegion.TopLeft[0])
 	scaleY := float64(window.BottomRight[1]-window.TopLeft[1]) / float64(rm.WindowRegion.BottomRight[1]-rm.WindowRegion.TopLeft[1])
 
-	// Apply the offset to all corners
-	adjustedArea := Area{
-		TopLeft:     [2]int{int(scaleX*float64(area.TopLeft[0]) + offsetX), int(scaleY*float64(area.TopLeft[1]) + offsetY)},
-		TopRight:    [2]int{int(scaleX*float64(area.TopRight[0]) + offsetX), int(scaleY*float64(area.TopRight[1]) + offsetY)},
-		BottomLeft:  [2]int{int(scaleX*float64(area.BottomLeft[0]) + offsetX), int(scaleY*float64(area.BottomLeft[1]) + offsetY)},
-		BottomRight: [2]int{int(scaleX*float64(area.BottomRight[0]) + offsetX), int(scaleY*float64(area.BottomRight[1]) + offsetY)},
+	pixelsToSide := float64(rm.PixelsToSide) * scaleX / 2
+
+	for number := range rm.Middle {
+		middle, exists := rm.Middle[number]
+		if !exists {
+			return fmt.Errorf("number %d not found in roulette map", number)
+		}
+
+		// Apply the offset to all corners
+		rm.MiddleAreas[number] = image.Rectangle{
+			Min: image.Point{int(scaleX*float64(middle[0]+offsetX) - pixelsToSide), int(scaleY*float64(middle[1]+offsetY) - pixelsToSide)},
+			Max: image.Point{int(scaleX*float64(middle[0]+offsetX) + pixelsToSide), int(scaleY*float64(middle[1]+offsetY) + pixelsToSide)},
+		}
 	}
 
-	return &adjustedArea, nil
+	return nil
 }
 
 func buildAbsoluteFilePath(filename string) string {
@@ -198,32 +177,67 @@ func buildAbsoluteFilePath(filename string) string {
 }
 
 func (rm *RouletteMap) ClickNumber(number int) {
-	area, exists := rm.NumberAreas[number]
+	area, exists := rm.MiddleAreas[number]
 	if !exists {
 		return
 	}
 
-	// Generate two random values between 0 and 1
-	s := rand.Float64()
-	t := rand.Float64()
-
-	// Ensure s + t <= 1 for proper distribution
-	if s+t > 1 {
-		s = 1 - s
-		t = 1 - t
-	}
-
-	// Bilinear interpolation using all four corners
-	x := int(float64(area.TopLeft[0])*(1-s)*(1-t) +
-		float64(area.TopRight[0])*s*(1-t) +
-		float64(area.BottomLeft[0])*(1-s)*t +
-		float64(area.BottomRight[0])*s*t)
-
-	y := int(float64(area.TopLeft[1])*(1-s)*(1-t) +
-		float64(area.TopRight[1])*s*(1-t) +
-		float64(area.BottomLeft[1])*(1-s)*t +
-		float64(area.BottomRight[1])*s*t)
+	x := area.Min.X + rand.Intn(area.Max.X-area.Min.X+1)
+	y := area.Min.Y + rand.Intn(area.Max.Y-area.Min.Y+1)
 
 	utils.Console.Trace().Msgf("Clicking number %d at coordinates: %d, %d", number, x, y)
 	Click(x, y)
+}
+
+func (rm *RouletteMap) PrintMap(window *Window) *image.Rectangle {
+	// Take a screenshot of the entire window area
+	width := window.BottomRight[0] - window.TopLeft[0]
+	height := window.BottomRight[1] - window.TopLeft[1]
+
+	img, err := robotgo.CaptureImg(window.TopLeft[0], window.TopLeft[1], width, height)
+	if err != nil {
+		utils.Console.Err(err).Msg("Failed to capture screenshot")
+		return nil
+	}
+
+	// Create a new RGBA image to draw on
+	bounds := img.Bounds()
+	rgba := image.NewRGBA(bounds)
+
+	// Copy the original image
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			rgba.Set(x, y, img.At(x, y))
+		}
+	}
+
+	// Draw cyan borders around each number area
+	cyan := color.RGBA{0, 255, 255, 255} // Cyan color
+	for _, area := range rm.MiddleAreas {
+		// Adjust coordinates relative to the window
+		relativeArea := image.Rect(
+			area.Min.X-window.TopLeft[0],
+			area.Min.Y-window.TopLeft[1],
+			area.Max.X-window.TopLeft[0],
+			area.Max.Y-window.TopLeft[1],
+		)
+
+		// Draw filled rectangle
+		for x := relativeArea.Min.X; x <= relativeArea.Max.X; x++ {
+			if x >= 0 && x < bounds.Max.X {
+				for y := relativeArea.Min.Y; y <= relativeArea.Max.Y; y++ {
+					if y >= 0 && y < bounds.Max.Y {
+						rgba.Set(x, y, cyan)
+					}
+				}
+			}
+		}
+	}
+
+	// Save the image
+	if err := robotgo.SaveJpeg(rgba, fmt.Sprintf("%s/roulette_map.jpg", utils.DataDir)); err != nil {
+		utils.Console.Error().Err(err).Msg("Failed to save image")
+	}
+
+	return nil
 }

@@ -28,3 +28,7 @@ number:
 # Find duplicated bets
 duplicates:
 	go run . --find-duplicated-bets $(ARGS)
+
+# Print the roulette with the number areas
+print-map:
+	go run . --print-map $(ARGS)

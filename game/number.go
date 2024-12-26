@@ -25,14 +25,6 @@ var (
 const (
 	pointsNum     = 20
 	pointsPerSide = 5
-
-	tmpDir       = "data/tmp"
-	tmpVerifyImg = "data/tmp/capture.jpeg"
-	outputDir    = "data/numbers"
-
-	debugImgFolder  = "debug"
-	resultImgFolder = "result"
-	failedImgFolder = "failed"
 )
 
 var (
@@ -66,7 +58,7 @@ func init() {
 	}
 
 	// Ensure directory exists
-	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+	if err := os.MkdirAll(utils.TmpDir, 0755); err != nil {
 		log.Fatalf("error creating tmp directory: %v", err)
 	}
 }
@@ -247,8 +239,8 @@ func extractNumber(img image.Image, color Color) (int, error) {
 
 	// Tesseract doesn't work with []bits, I don't know why... Saving it to jpeg works.
 	// TODO save png?
-	robotgo.SaveJpeg(img, tmpVerifyImg)
-	if err := client.SetImage(tmpVerifyImg); err != nil {
+	robotgo.SaveJpeg(img, utils.TmpVerifyImg)
+	if err := client.SetImage(utils.TmpVerifyImg); err != nil {
 		return 0, fmt.Errorf("error setting image: %w", err)
 	}
 
@@ -270,7 +262,7 @@ func extractNumber(img image.Image, color Color) (int, error) {
 		return handleFailValue(img, text, "error validating number")
 	}
 
-	if err := saveNumber(img, resultImgFolder, text); err != nil {
+	if err := saveNumber(img, utils.ResultImgFolder, text); err != nil {
 		utils.Console.Err(err).Msg("error saving number")
 	}
 
@@ -278,7 +270,7 @@ func extractNumber(img image.Image, color Color) (int, error) {
 }
 
 func handleFailValue(img image.Image, text string, errText string) (int, error) {
-	if err := saveNumber(img, failedImgFolder, text); err != nil {
+	if err := saveNumber(img, utils.FailedImgFolder, text); err != nil {
 		utils.Console.Err(err).Msg("error saving number")
 	}
 
@@ -298,7 +290,7 @@ func validateNumber(number int, color Color) error {
 
 func saveNumber(img image.Image, folder string, number string) error {
 	// Ensure directory exists
-	var dir = fmt.Sprintf("%s/%s", outputDir, folder)
+	dir := fmt.Sprintf("%s/%s", utils.OutputDir, folder)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		utils.Console.Fatal().Msgf("error creating output directory: %v", err)
 	}

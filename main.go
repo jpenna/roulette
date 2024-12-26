@@ -31,11 +31,13 @@ func main() {
 	switch args[0] {
 	case "--simulate":
 		runSimulations()
-		return
+		// runPlayGuess()
 	case "--bets":
 		printBets()
 	case "--build-map":
 		robot.NewRouletteMap("roulette.json")
+	case "--print-map":
+		printMap()
 	case "--mouse":
 		robot.MousePosition()
 	case "--play-auto":
@@ -52,15 +54,29 @@ func main() {
 	}
 }
 
+func printMap() {
+	window := robot.Window{}
+
+	window.CaptureSize()
+
+	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
+	if err != nil {
+		utils.Console.Err(err).Msg("error loading roulette map")
+		return
+	}
+
+	rouletteMap.PrintMap(&window)
+}
+
 func runSimulations() {
-	list := simulation.Combined3
+	list := simulation.List7
 	chipValue := 2.5
 
 	sum0 := 0.0
 	sum1 := 0.0
 	sum2 := 0.0
 
-	sliceSize := 75
+	sliceSize := 100
 	for i := 0; i < len(list)/sliceSize; i++ {
 
 		start := i * sliceSize
@@ -91,4 +107,24 @@ func runSimulations() {
 	simulation.Run(list, chipValue, 0)
 	simulation.Run(list, chipValue, 1)
 	simulation.Run(list, chipValue, 2)
+}
+
+func runPlayGuess() {
+	list := simulation.List7
+	chipValue := 2.5
+
+	lasts := []int{25, 50, 75, 100}
+
+	for _, end := range lasts {
+		fmt.Printf("\n\n----\n\nend: %d\n", end)
+
+		res0 := simulation.Run(list[:end], chipValue, 0)
+		res1 := simulation.Run(list[:end], chipValue, 1)
+		res2 := simulation.Run(list[:end], chipValue, 2)
+
+		fmt.Printf("0: %f\n", res0)
+		fmt.Printf("1: %f\n", res1)
+		fmt.Printf("2: %f\n", res2)
+		fmt.Println()
+	}
 }

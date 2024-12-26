@@ -3,6 +3,7 @@ package play
 import (
 	"fmt"
 	"math/rand/v2"
+	"os"
 	"time"
 
 	"elem.com/roulette/game"
@@ -14,8 +15,8 @@ import (
 func Play() {
 	window := robot.Window{}
 	window.CaptureSize()
-	window.SetReadyBarPosition(0)
 	window.SetNumberAreas()
+	window.SetReadyBarPosition(0)
 	window.CaptureTerminal()
 
 	rouletteMap, err := robot.UseRouletteMap("roulette.json", &window)
@@ -23,6 +24,8 @@ func Play() {
 		utils.Console.Err(err).Msg("error loading roulette map")
 		return
 	}
+
+	confirmBetAreas(&window, rouletteMap)
 
 	maxProtection := requestProtection()
 	gState := game.NewGameState(maxProtection)
@@ -49,6 +52,19 @@ func Play() {
 	for targets := range targetCh {
 		selectTargets(targets, &window, rouletteMap)
 		betCh <- struct{}{}
+	}
+}
+
+func confirmBetAreas(window *robot.Window, rouletteMap *robot.RouletteMap) {
+	rouletteMap.PrintMap(window)
+
+	fmt.Println("Confirme as áreas de aposta e digite 'y' para continuar...")
+	var input string
+	fmt.Scanln(&input)
+
+	if input != "y" {
+		utils.Console.Error().Msg("Áreas de aposta não confirmadas, abortando...")
+		os.Exit(1)
 	}
 }
 
