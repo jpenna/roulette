@@ -5,6 +5,10 @@ install-air:
 simulate:
 	go run . --simulate $(ARGS)
 
+# Simulation to decide how to play
+guess:
+	go run . --guess $(ARGS)
+
 # Print all bets for a given number
 bets:
 	go run . --bets $(ARGS)
@@ -14,7 +18,7 @@ build-map:
 	go run . --build-map $(ARGS)
 
 # Play the game with the robot
-auto:
+run:
 	go run . --play-auto $(ARGS)
 
 # Print the mouse position

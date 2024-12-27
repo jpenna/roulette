@@ -35,11 +35,13 @@ func execute(numbers []int, bet float64, protection int, martin bool) float64 {
 	matches := 0
 
 	for i, win := range results {
+		gameCost := bet * 12 * float64(uint(1)<<pow)
+
 		if win {
-			investment += bet * 36 * float64(uint(1)<<pow)
+			investment += bet*36*float64(uint(1)<<pow) - gameCost
 			matches++
 		} else {
-			investment -= bet * 12 * float64(uint(1)<<pow)
+			investment -= gameCost
 		}
 
 		if investment < worstLoss {

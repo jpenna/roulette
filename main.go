@@ -31,7 +31,8 @@ func main() {
 	switch args[0] {
 	case "--simulate":
 		runSimulations()
-		// runPlayGuess()
+	case "--guess":
+		runPlayGuess()
 	case "--bets":
 		printBets()
 	case "--build-map":
@@ -69,7 +70,7 @@ func printMap() {
 }
 
 func runSimulations() {
-	list := simulation.List7
+	list := simulation.Combined4
 	chipValue := 2.5
 
 	sum0 := 0.0
@@ -110,7 +111,7 @@ func runSimulations() {
 }
 
 func runPlayGuess() {
-	list := simulation.List7
+	list := simulation.Combined4
 	chipValue := 2.5
 
 	lasts := []int{25, 50, 75, 100}
